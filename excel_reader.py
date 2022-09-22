@@ -24,8 +24,13 @@ def read_classes(bot, user, database, path, day, edited):
     if type(classes) != type({}):
         bot.send_message(user["id"], "Произошла ошибка декодирования классов!")
         return True
-    rd = xlrd.open_workbook(path, formatting_info=True)
-    sheet = rd.sheet_by_index(0)
+    try:
+        rd = xlrd.open_workbook(path, formatting_info=True)
+        sheet = rd.sheet_by_index(0)
+    except:
+        bot.send_message(user["id"], "Не получилось открыть файл")
+        os.remove(path)
+        return
     data = {}
     classes_in_excel = []
     for i in range(sheet.nrows):
@@ -50,7 +55,6 @@ def read_classes(bot, user, database, path, day, edited):
         base_data = json.loads(base_data[0][0])
         base_data["edited" if edited else "standart"][day] = data[i]
         database.update("schedule_classes", {"schedule": json.dumps(base_data, indent=2)})
-        print(subscribe)
         for j in subscribe:
             try:
                 answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании для {i} класса:</b>\n"
@@ -68,8 +72,14 @@ def read_teachers(bot, user, database, path, day, edited):
         bot.send_message(user["id"], "Проблема получения данных учителей")
         os.remove
         return False
-    rd = xlrd.open_workbook(path, formatting_info=True)
-    sheet = rd.sheet_by_index(0)
+    try:
+        rd = xlrd.open_workbook(path, formatting_info=True)
+        sheet = rd.sheet_by_index(0)
+    except:
+        bot.send_message(user["id"], "Не получилось открыть файл")
+        os.remove(path)
+        return
+    answer = []
     for k in teachers:
         name = k[0]
         subscribe = json.loads(k[1])
@@ -82,6 +92,7 @@ def read_teachers(bot, user, database, path, day, edited):
                 if flag:
                     break
                 if name == sheet.cell_value(i, j):
+                    answer.append(name)
                     flag = True
                     data = []
                     for k in range(1, 18, 2):
@@ -111,4 +122,6 @@ def read_teachers(bot, user, database, path, day, edited):
                             pass
                     schedule["edited" if edited else "standart"][day] = data
                     database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
+    bot.send_message(user["id"], f"Расписание: teachers\nИзменения: {edited}\nДень: {day}")
+    bot.send_message(user["id"], str(answer))
     os.remove(path)

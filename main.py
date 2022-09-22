@@ -1,15 +1,9 @@
-import telebot
-import config
-import mysql.connector
-import json
+import telebot, excel_reader, config, mysql.connector, json, get_weather, os, urllib, requests, time
 from telebot import types
+from datetime import datetime
 from DB import DB
-import get_weather
 from copy import copy as copy_object
-import os
-import urllib
-import requests
-import excel_reader
+from threading import Thread
 
 bot = telebot.TeleBot(config.TOKEN)
 database = DB(config.mysql)
@@ -47,8 +41,14 @@ def weekday(text):
         "ПТ": "ПЯТНИЦА",
         "СБ": "СУББОТА",
         "ВСЯ НЕДЕЛЯ": "ВСЯ НЕДЕЛЯ",
-        "ВН": "ВСЯ НЕДЕЛЯ"
-    }).get(text.upper())
+        "ВН": "ВСЯ НЕДЕЛЯ",
+        "1": "ПОНЕДЕЛЬНИК",
+        "2": "ВТОРНИК",
+        "3": "СРЕДА",
+        "4": "ЧЕТВЕРГ",
+        "5": "ПЯТНИЦА",
+        "6": "СУББОТА",
+    }).get(str(text).upper())
 
 def user_update(user, status=None, settings=None):
     if status and not settings:
@@ -246,9 +246,11 @@ def document(message):
     teachers = database.select("config", ["data"], [["theme","=","teachers"]])
     if not teachers:
         print("Not teachers")
+        return False
     teachers = json_loads(teachers[0][0])
     if type(teachers) != type({}):
         print("Type teachers != {}")
+        return False
     teachers = [teachers[i] for i in teachers]
     if user["id"] not in teachers:
         return True
@@ -719,5 +721,40 @@ def handle_text(message):
     else:
         bot.send_message(user["id"], f"Статус {user['status']} не найден!")
     return
+
+def today(last_day = False):
+    now = datetime.now().weekday() + 1
+    if now == 7:
+        now = 6
+    if last_day:
+        now -= 1
+    if now == 0:
+        now = 6
+    return now
+
+def weekdays():
+    time_last = weekday(today())
+    while True:
+        if time_last == weekday(today(last_day=True)):
+            last_day = weekday(today(last_day=True))
+            schedule_classes = [{"parallel": i[0], "symbol": i[1], "schedule": json_loads(i[2])} for i in database.select("schedule_classes", ["parallel", "symbol", "schedule"])]
+            schedule_teachers = [{"name": i[0], "schedule": json_loads(i[1])} for i in database.select("teachers", ["name", "schedule"])]
+            for i in schedule_classes:
+                parallel = i["parallel"]
+                symbol = i["symbol"]
+                schedule = i["schedule"]
+                if schedule["edited"].get(last_day):
+                    schedule["edited"].pop(last_day)
+                    database.update("schedule_classes", {"schedule": json.dumps(schedule, indent=2)}, [["parallel", "=", parallel], ["symbol", "=", symbol]])
+            for i in schedule_teachers:
+                name = i["name"]
+                if schedule["edited"].get(last_day):
+                    schedule["edited"].pop(last_day)
+                    database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
+            bot.send_message(847721936, f"Удаление расписания на {last_day}")
+        time_last = weekday(today())
+        time.sleep(30)
+thread1 = Thread(target=weekdays)
+thread1.start()
 
 bot.polling()

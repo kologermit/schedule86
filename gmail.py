@@ -2,19 +2,14 @@ import xlrd
 import imaplib
 import email
 import os
-import base64
-import telebot
-import config
-import BD_query
-import json
+import base64, telebot, BD_query, json
+from config import *
+import 
+import 
 import time
 from datetime import datetime
-from config import GM_PORT
-from config import GM_HOST
-from config import GM_LOGIN
-from config import GM_PASSWORD
-bot = telebot.TeleBot(config.TOKEN)
-senders = BD_query.BD_query(BD_query.get_sql(**config.mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "teachers")])
+bot = telebot.TeleBot(TOKEN)
+senders = BD_query.BD_query(BD_query.get_sql(**mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "teachers")])
 print(senders)
 senders = json.loads(senders[0][0])
 imap = imaplib.IMAP4_SSL("imap.gmail.com")
@@ -24,7 +19,7 @@ def erase_null(line):
 		return int(line)
 	return line
 def get_sql():
-	return BD_query.get_sql(**config.mysql_config)
+	return BD_query.get_sql(**mysql_config)
 
 def is_num(line):
 	try:
@@ -119,7 +114,7 @@ def words(line):
 		a = next_word(a[1])
 	return answer
 
-admins = BD_query.BD_query(BD_query.get_sql(**config.mysql_config), "SELECT", "info", columns="text", where=[("theme", "=", "admins")])
+admins = BD_query.BD_query(BD_query.get_sql(**mysql_config), "SELECT", "info", columns="text", where=[("theme", "=", "admins")])
 if admins:
     admins = json.loads(admins[0][0])
 for key in admins:
@@ -213,8 +208,8 @@ while True:
 			continue
 			result = None
 		if is_teachers == False:
-			classes = BD_query.BD_query(BD_query.get_sql(**config.mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "classes")])
-			chat_id = BD_query.BD_query(BD_query.get_sql(**config.mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "teachers")])
+			classes = BD_query.BD_query(BD_query.get_sql(**mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "classes")])
+			chat_id = BD_query.BD_query(BD_query.get_sql(**mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "teachers")])
 			if classes != []:
 				classes = classes[0][0]
 			classes = json.loads(classes)
@@ -297,7 +292,7 @@ while True:
 				answer[edited][day.upper()] = key[1]
 				r = BD_query.BD_query(get_sql(), "UPDATE", "classes", where=[("class_b", "=", class_b), ("class_n", "=", class_n)], data=[("schedule", json.dumps(answer, indent=2).replace('\\\\', ''))])
 		else:
-			teachers = BD_query.BD_query(BD_query.get_sql(**config.mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "teachers_table")])
+			teachers = BD_query.BD_query(BD_query.get_sql(**mysql_config), "SELECT", table="info", columns="text", where=[("theme", "=", "teachers_table")])
 			if teachers != []:
 				teachers = teachers[0][0]
 			teachers = json.loads(teachers.upper())
