@@ -72,7 +72,6 @@ def is_class(text, database):
             if int(text[0]) >= 5:
                 classes = database.select("config", "data", [["theme", "=", "classes"]])
                 if not classes:
-                    print(classes)
                     return None
                 classes = json_loads(classes[0][0])
                 if not classes or type(classes) != type({}):
@@ -87,7 +86,6 @@ def is_class(text, database):
             if int(text[0:2]) >= 10 and int(text[0:2]) <= 11:
                 classes = database.select("config", "data", [["theme", "=", "classes"]])
                 if not classes:
-                    print(classes)
                     return None
                 classes = json_loads(classes[0][0])
                 if not classes or type(classes) != type({}):
@@ -363,7 +361,6 @@ class MessageHandler:
             return True
         if "КАНИКУЛЫ" in message.text:
             data = database.select('config', 'data', [['theme','=','holidays']])
-            print(data)
             if not data:
                 bot.send_message(user["id"], "Произошла ошибка получшения расписания")
             else:
@@ -385,7 +382,6 @@ class MessageHandler:
                     classes = database.select("config", "data", [["theme", "=", "classes"]])
                     if not classes:
                         bot.send_message(user["id"], "Произошла ошибка!")
-                        print(classes)
                         return True
                     classes = json_loads(classes[0][0])
                     if not classes or type(classes) != type({}):
@@ -401,7 +397,6 @@ class MessageHandler:
                     classes = database.select("config", "data", [["theme", "=", "classes"]])
                     if not classes:
                         bot.send_message(user["id"], "Произошла ошибка!")
-                        print(classes)
                         return True
                     classes = json_loads(classes[0][0])
                     if not classes or type(classes) != type({}):
@@ -538,7 +533,6 @@ class MessageHandler:
                 answer = ""
                 if user["settings"]["subscribe"]:
                     answer += "Классы, на которые вы подписаны:\n"
-                    # print(user["settings"].get("subscribe"))
                     for i in range(len(user["settings"]["subscribe"])):
                         answer += f"{i + 1}. {user['settings']['subscribe'][i]}\n"
                 else:
@@ -559,7 +553,6 @@ class MessageHandler:
                     classes = database.select("config", "data", [["theme", "=", "classes"]])
                     if not classes:
                         bot.send_message(user["id"], "Произошла ошибка!")
-                        print(classes)
                         return True
                     classes = json_loads(classes[0][0])
                     if not classes or type(classes) != type({}):
@@ -593,7 +586,6 @@ class MessageHandler:
                             classes = database.select("config", "data", [["theme", "=", "classes"]])
                             if not classes:
                                 bot.send_message(user["id"], "Произошла ошибка!")
-                                print(classes)
                                 return True
                             classes = json_loads(classes[0][0])
                             if not classes or type(classes) != type({}):
@@ -620,7 +612,6 @@ class MessageHandler:
                             classes = database.select("config", "data", [["theme", "=", "classes"]])
                             if not classes:
                                 bot.send_message(user["id"], "Произошла ошибка!")
-                                print(classes)
                                 return True
                             classes = json_loads(classes[0][0])
                             if not classes or type(classes) != type({}):
@@ -656,7 +647,6 @@ class MessageHandler:
                 answer = ""
                 if user["settings"]["commands"]:
                     answer += "Ваши избранные команды:\n"
-                    # print(user["settings"].get("subscribe"))
                     for i in range(len(user["settings"]["commands"])):
                         answer += f"{i + 1}. {user['settings']['commands'][i]}\n"
                 else:

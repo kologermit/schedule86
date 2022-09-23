@@ -3,7 +3,6 @@ from config import mysql as mysql_config
 class DB:
     def __init__(self, config):
         self.__pool = MySQL.connect(**config)
-        self.__cursor = self.__pool.cursor()
 
     def update(self, table, values, where=None):
         query = f"UPDATE {table} SET "
@@ -23,9 +22,9 @@ class DB:
                 data.append(i[2])
         try:
             cursor = self.__pool.cursor()
-            self.__cursor.execute(query, data)
+            cursor.execute(query, data)
             self.__pool.commit()
-            self.__cursor.close()
+            cursor.close()
             return True
         except Exception as err:
             print(err)
@@ -33,7 +32,6 @@ class DB:
         
         #values = {"col1": "data"}
         #where = (["col1", "=", "data"], ["col2", "=", "data2"])
-
 
     def insert(self, table, columns, values):
         # columns = [col1, col2, col3]
@@ -62,15 +60,13 @@ class DB:
             query += ")"
         try:
             cursor = self.__pool.cursor()
-            self.__cursor.execute(query, data)
+            cursor.execute(query, data)
             self.__pool.commit()
-            self.__cursor.close()
+            cursor.close()
             return True
         except Exception as err:
             print(err)
             return None
-
-
 
     def select(self, table, columns="*", where=None, limit=None):
         query = f"SELECT "
@@ -93,10 +89,10 @@ class DB:
             data.append(limit)
         try:
             cursor = self.__pool.cursor()
-            self.__cursor.execute(query, data)
-            res = self.__cursor.fetchall()
+            cursor.execute(query, data)
+            res = cursor.fetchall()
             self.__pool.commit()
-            self.__cursor.close()
+            cursor.close()
             return res
         except Exception as err:
             print(err)
