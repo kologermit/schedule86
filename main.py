@@ -527,9 +527,13 @@ class MessageHandler:
                         bot.send_message(user["id"], "Произошла ошибка получшения расписания")
                 return True
             elif "НАЗАД" in message.text:
-                print(user)
-                bot.send_message(user["id"], "Выберите букву:")#, reply_markup=markups([i for i in classes[str(int(message.text))]] + ["Назад🔙"]))
-                # user_update(user, "schedule:symbol")
+                classes = database.select("config", "data", [["theme", "=", "classes"]])
+                if not classes:
+                    bot.send_message(user["id"], "Произошла ошибка!")
+                    return True
+                classes = json_loads(classes[0][0])
+                bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(user["class_parallel"])]] + ["Назад🔙"]))
+                user_update(user, "schedule:symbol")
                 return True
 
     class Settings:
