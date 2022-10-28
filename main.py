@@ -16,12 +16,12 @@ def json_loads(data):
         return None
 
 def get_user(message):
-    data = database.select('users', ['id', 'name', 'status', 'settings'], [['id', '=', message.chat.id]], 1)
+    data = database.select('users', ['id', 'name', 'status', 'settings', 'class_parallel'], [['id', '=', message.chat.id]], 1)
     if (data):
-        return {"id": data[0][0], "name": data[0][1], "status": data[0][2], "settings": json.loads(data[0][3])}
+        return {"id": data[0][0], "name": data[0][1], "status": data[0][2], "settings": json.loads(data[0][3]), 'class_parallel': data[0][4]}
     else:
         database.insert('users', ['id', 'name', 'status', 'settings'], [[message.chat.id, message.chat.first_name, 'menu', '{\"subscribe\": [], \"commands\": []}']])
-        return {"id": message.chat.id, "name": message.chat.first_name, "status": 'menu', "settings": {"subscribe": [], "commands": []}}
+        return {"id": message.chat.id, "name": message.chat.first_name, "status": 'menu', "settings": {"subscribe": [], "commands": []}, "class_parallel": ''}
 
 def log(message, user):
     query = "INSERT INTO log (text) VALUES (%s)"
