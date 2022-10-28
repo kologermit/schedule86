@@ -457,8 +457,12 @@ class MessageHandler:
         def parallel(bot, message, user):
             if message.text.isdigit():
                 if int(message.text) >= 5 and int(message.text) <= 11:
-                    print(database.select('schedule_classes', 'symbol', where = [['parallel', '=', 'message.text']]))
-                    bot.send_message(user["id"], "Выберите букву:", reply_markup=markups(["А", "Б", "В", "Г", "Назад🔙"]))
+                    classes = database.select("config", "data", [["theme", "=", "classes"]])
+                    if not classes:
+                        bot.send_message(user["id"], "Произошла ошибка!")
+                        return True
+                    classes = json_loads(classes[0][0])
+                    bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(int(message.text))]] + ["Назад🔙"]))
                     user["settings"]["class_parallel"] = int(message.text)
                     user_update(user, "schedule:symbol", json.dumps(user["settings"], indent=2))
                     return True
@@ -523,7 +527,12 @@ class MessageHandler:
                         bot.send_message(user["id"], "Произошла ошибка получшения расписания")
                 return True
             elif "НАЗАД" in message.text:
-                bot.send_message(user["id"], "Выберите букву:", reply_markup=markups(["А", "Б", "В", "Г", "Назад🔙"]))
+                classes = database.select("config", "data", [["theme", "=", "classes"]])
+                if not classes:
+                    bot.send_message(user["id"], "Произошла ошибка!")
+                    return True
+                classes = json_loads(classes[0][0])
+                bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(int(message.text))]] + ["Назад🔙"]))
                 user_update(user, "schedule:symbol")
                 return True
 
