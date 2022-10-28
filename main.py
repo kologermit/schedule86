@@ -646,6 +646,16 @@ class MessageHandler:
                                 bot.send_message(user["id"], f"Вы успешно подписались на расписание {message.text} класса", reply_markup=settings_markup)
                                 user["settings"]["subscribe"].append(message.text)
                                 user_update(user, "settings", json.dumps(user["settings"], indent=2))
+                                schedule_class = database.select("schedule_classes", ["parallel", "symbol", "subscribe"], [["parallel", "=", int(message.text[:-1])], ["symbol", "=", message.text[-1]]])
+                                if not schedule_class:
+                                    return True
+                                schedule_class = {
+                                    "parallel": schedule_class[0][0],
+                                    "symbol": schedule_class[0][1],
+                                    "subscribe": json.loads(schedule_class[0][2])
+                                }
+                                schedule_class["subscribe"].append(user["id"])
+                                database.update("schedule_classes", {"subscribe": json.dumps(schedule_class["subscribe"], indent=2)}, [["parallel", "=", schedule_class["parallel"]], ["symbol", "=", schedule_class["symbol"]]])
                                 return True
 
             def delete(bot, message, user):
@@ -661,7 +671,7 @@ class MessageHandler:
                         "symbol": schedule_class[0][1],
                         "subscribe": json.loads(schedule_class[0][2])
                     }
-                    if user["id"] in schedule_class["status"]:
+                    if user["id"] in schedule_class["subscribe"]:
                         schedule_class["subscribe"].remove(user["id"])
                         database.update("schedule_classes", {"subscribe": json.dumps(schedule_class["subscribe"], indent=2)}, [["parallel", "=", schedule_class["parallel"]], ["symbol", "=", schedule_class["symbol"]]])
                     return True
@@ -752,8 +762,12 @@ def handle_text(message):
         "settings:commands:delete": MessageHandler.Settings.Commands.delete
     }
     if action.get(user["status"]):
-        if not action[user["status"]](bot, message, user):
-            bot.send_message(user["id"], "Не понял!")
+        try:
+            if not action[user["status"]](bot, message, user):
+                bot.send_message(user["id"], "Не понял!")
+        except Exception as err:
+            print(err)
+            bot.send_message(user["id"], "Произошла ошибка")
     else:
         bot.send_message(user["id"], f"Статус {user['status']} не найден!")
     return
