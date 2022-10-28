@@ -1,6 +1,8 @@
 import os
 import xlrd
 import json
+from DB import DB
+from config import mysql
 
 def json_loads(data):
     try:
@@ -14,7 +16,8 @@ def is_class_name(classes, line):
         data += i
     return line.upper() in data
 
-def read_classes(bot, user, database, path, day, edited):
+def read_classes(bot, user, path, day, edited):
+    database = DB(mysql)
     classes = database.select("config", "data", [["theme", "=", "classes"]])
     if not classes:
         bot.send_message(user["id"], "Произошла ошибка получения классов!")
@@ -40,10 +43,13 @@ def read_classes(bot, user, database, path, day, edited):
                 classes_in_excel.append(key)
                 data[key] = []
                 for i1 in range(1, 17, 2):
-                    if str(sheet.cell_value(i + i1, j)) == "":
-                        data[key].append("-")
-                    else:
-                        data[key].append(str(sheet.cell_value(i + i1, j)))
+                    try:
+                        if str(sheet.cell_value(i + i1, j)) == "":
+                            data[key].append("-")
+                        else:
+                            data[key].append(str(sheet.cell_value(i + i1, j)))
+                    except:
+                        pass
                 while data[key][-1] == "-":
                     data[key] = data[key][:-1]
     bot.send_message(user["id"], f"Полученные классы: {str(list(data))}")
@@ -54,7 +60,9 @@ def read_classes(bot, user, database, path, day, edited):
         subscribe = json.loads(base_data[0][1])
         base_data = json.loads(base_data[0][0])
         base_data["edited" if edited else "standart"][day] = data[i]
-        database.update("schedule_classes", {"schedule": json.dumps(base_data, indent=2)})
+        # print(int(i[:-1]))
+        # print(i[-1])
+        database.update("schedule_classes", {"schedule": json.dumps(base_data, indent=2)}, where=[["parallel", "=",int(i[:-1])], ["symbol", "=", i[-1]]])
         for j in subscribe:
             try:
                 answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании для {i} класса:</b>\n"
@@ -64,9 +72,11 @@ def read_classes(bot, user, database, path, day, edited):
             except:
                 pass
     os.remove(path)
+    del database
     pass
 
-def read_teachers(bot, user, database, path, day, edited):
+def read_teachers(bot, user, path, day, edited):
+    database = DB(mysql)
     teachers = database.select("teachers", ["name", "subscribe", "schedule"])
     if not teachers:
         bot.send_message(user["id"], "Проблема получения данных учителей")
@@ -91,6 +101,10 @@ def read_teachers(bot, user, database, path, day, edited):
             for j in range(sheet.ncols):
                 if flag:
                     break
+                try:
+                    sheet.cell_value(i, j)
+                except:
+                    continue
                 if name == sheet.cell_value(i, j):
                     answer.append(name)
                     flag = True
@@ -122,6 +136,7 @@ def read_teachers(bot, user, database, path, day, edited):
                             pass
                     schedule["edited" if edited else "standart"][day] = data
                     database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
-    bot.send_message(user["id"], f"Расписание: teachers\nИзменения: {edited}\nДень: {day}")
-    bot.send_message(user["id"], str(answer))
+    # bot.send_message(user["id"], f"Расписание: teachers\nИзменения: {edited}\nДень: {day}")
+    bot.send_message(user["id"], "Всё ок")
     os.remove(path)
+    del database

@@ -7,7 +7,7 @@ from threading import Thread
 
 bot = telebot.TeleBot(config.TOKEN)
 database = DB(config.mysql)
-bot.send_message(847721936, "Start Bot")
+bot.send_message(847721936, "Start Bot") #847721936
 
 def json_loads(data):
     try:
@@ -114,7 +114,7 @@ def start_message(message):
     log(message, user)
     user_update(user, "menu")
 
-@bot.message_handler(commands=['reload_menu'])
+@bot.message_handler(commands=['restart'])
 def start_message(message):
     user = get_user(message)
     bot.send_message(message.chat.id,"Перезаряжаю!!!!!!!!!!", reply_markup=menu_markups(user))
@@ -133,7 +133,7 @@ def t(message):
     if len(message_data) == 1:
         bot.send_message(user["id"],"Вы не написали фамилию учителя")
         return True
-    data = database.select("teachers", ["schedule", "name"], [["name","RLIKE",message_data[1]]])
+    data = database.select("teachers", ["schedule", "name"], [["upper(name)","RLIKE",message_data[1].upper()]])
     if not data:
         bot.send_message(user["id"],"Данный учитель не найден")
         return True
@@ -160,11 +160,11 @@ def t(message):
     if day != "ВСЯ НЕДЕЛЯ":
         answer = f"<b>Расписание {name} на {day}:\n</b>"
         for i in range(len(data['standart'][day])):
-            answer += f"<b>{i + 1})</b> {data['standart'][day][i]}\n"
+            answer += f"<b>{i})</b> {data['standart'][day][i]}\n"
         if data["edited"].get(day):
             answer += "\n<b>Изменения:</b>\n"
             for i in range(len(data["edited"][day])):
-                answer += f"<b>{i + 1})</b> {data['edited'][day][i]}\n"
+                answer += f"<b>{i})</b> {data['edited'][day][i]}\n"
         else:
             answer += "\n<b>Изменений нет</b>"
     else:
@@ -172,14 +172,14 @@ def t(message):
         for i in data["standart"]:
             answer += f"<b>{i.capitalize()}:</b>\n"
             for j in range(len(data["standart"][i])):
-                answer += f"<b>{j + 2})</b> {data['standart'][i][j]}\n"
+                answer += f"<b>{j + 1})</b> {data['standart'][i][j]}\n"
             answer += "\n"
         if data["edited"]:
             answer += "<b>Изменения:</b>\n"
             for i in data["edited"]:
                 answer += f"<b>{i.capitalize()}:</b>\n"
                 for j in range(len(data["edited"][i])):
-                    answer += f"<b>{j + 2})</b> {data['edited'][i][j]}\n"
+                    answer += f"<b>{j + 1})</b> {data['edited'][i][j]}\n"
                 answer += "\n"
         else:
             answer += "<b>Изменений нет</b>"
@@ -297,10 +297,18 @@ def document(message):
         bot.send_message(user["id"], f"Произошла ошибка получения файла: {err}")
         print(err)
         return True
-    if is_classes:
-        excel_reader.read_classes(bot, user, database, f"Temp/{user['id']}/{file_path}", day, edited)
-    else:
-        excel_reader.read_teachers(bot, user, database, f"Temp/{user['id']}/{file_path}", day, edited)
+    try:
+        if is_classes:
+            excel_reader.read_classes(bot, user, f"Temp/{user['id']}/{file_path}", day, edited)
+        else:
+            excel_reader.read_teachers(bot, user, f"Temp/{user['id']}/{file_path}", day, edited)
+    except Exception as err:
+        print(f"Error in excel reader: {err}")
+        bot.send_message(user["id"], f"Произошла ошибка во время обработки файла:\nУчителя:{not is_classes}\nИзменения:{edited}\nДень:{day}")
+    try:
+        os.remove(file_path)
+    except:
+        pass
 
 def next_word(line):
     line = line.strip()
@@ -374,6 +382,11 @@ class MessageHandler:
             return True
         if message.text.isdigit():
             if int(message.text) >= 5 and int(message.text) <= 11:
+                classes = database.select("config", "data", [["theme", "=", "classes"]])
+                if not classes:
+                    bot.send_message(user["id"], "Произошла ошибка!")
+                    return True
+                classes = json_loads(classes[0][0])
                 bot.send_message(user["id"], "Выберите букву:", reply_markup=markups(["А", "Б", "В", "Г", "Назад🔙"]))
                 user["settings"]["class_parallel"] = int(message.text)
                 user_update(user, "schedule:symbol", json.dumps(user["settings"], indent=2))
@@ -444,6 +457,7 @@ class MessageHandler:
         def parallel(bot, message, user):
             if message.text.isdigit():
                 if int(message.text) >= 5 and int(message.text) <= 11:
+                    print(database.select('schedule_classes', 'symbol', where = [['parallel', '=', 'message.text']]))
                     bot.send_message(user["id"], "Выберите букву:", reply_markup=markups(["А", "Б", "В", "Г", "Назад🔙"]))
                     user["settings"]["class_parallel"] = int(message.text)
                     user_update(user, "schedule:symbol", json.dumps(user["settings"], indent=2))
@@ -457,7 +471,7 @@ class MessageHandler:
             return True
 
         def symbol(bot, message, user):
-            if len(message.text) == 1 and message.text in "АБВГ":
+            if len(message.text) == 1 and message.text in "АБВГД":
                 bot.send_message(user["id"], "Выберите день недели:", reply_markup=markups(["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Вся неделя", "Назад🔙"]))
                 user["settings"]["class_symbol"] = message.text
                 user_update(user, "schedule:day", json.dumps(user["settings"], indent=2))
@@ -490,7 +504,7 @@ class MessageHandler:
                             for i in data["standart"]:
                                 answer += f"<b>{i.capitalize()}:</b>\n"
                                 for j in range(len(data["standart"][i])):
-                                    answer += f"<b>{j + 2})</b> {data['standart'][i][j]}\n"
+                                    answer += f"<b>{j + 1})</b> {data['standart'][i][j]}\n"
                                 answer += "\n"
                             if data["edited"]:
                                 answer += "<b>Изменения:</b>\n"
@@ -694,6 +708,18 @@ class MessageHandler:
                     user_update(user, "settings", json.dumps(user["settings"], indent=2))
                     return True
 
+def update_connection():
+    while True:
+        try:
+            del database
+            database = DB(mysql)
+            time.sleep(5)
+        except:
+            pass
+
+thread1 = Thread(target=update_connection)
+thread1.start()
+
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
     print(f"{message.chat.id} {message.chat.first_name} |{message.text}|")
@@ -721,40 +747,5 @@ def handle_text(message):
     else:
         bot.send_message(user["id"], f"Статус {user['status']} не найден!")
     return
-
-def today(last_day = False):
-    now = datetime.now().weekday() + 1
-    if now == 7:
-        now = 6
-    if last_day:
-        now -= 1
-    if now == 0:
-        now = 6
-    return now
-
-def weekdays():
-    time_last = weekday(today())
-    while True:
-        if time_last == weekday(today(last_day=True)):
-            last_day = weekday(today(last_day=True))
-            schedule_classes = [{"parallel": i[0], "symbol": i[1], "schedule": json_loads(i[2])} for i in database.select("schedule_classes", ["parallel", "symbol", "schedule"])]
-            schedule_teachers = [{"name": i[0], "schedule": json_loads(i[1])} for i in database.select("teachers", ["name", "schedule"])]
-            for i in schedule_classes:
-                parallel = i["parallel"]
-                symbol = i["symbol"]
-                schedule = i["schedule"]
-                if schedule["edited"].get(last_day):
-                    schedule["edited"].pop(last_day)
-                    database.update("schedule_classes", {"schedule": json.dumps(schedule, indent=2)}, [["parallel", "=", parallel], ["symbol", "=", symbol]])
-            for i in schedule_teachers:
-                name = i["name"]
-                if schedule["edited"].get(last_day):
-                    schedule["edited"].pop(last_day)
-                    database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
-            bot.send_message(847721936, f"Удаление расписания на {last_day}")
-        time_last = weekday(today())
-        time.sleep(30)
-thread1 = Thread(target=weekdays)
-thread1.start()
 
 bot.polling()
