@@ -661,8 +661,9 @@ class MessageHandler:
                         "symbol": schedule_class[0][1],
                         "subscribe": json.loads(schedule_class[0][2])
                     }
-                    schedule_class["subscribe"].remove(user["id"])
-                    database.update("schedule_classes", {"subscribe": json.dumps(schedule_class["subscribe"], indent=2)}, [["parallel", "=", schedule_class["parallel"]], ["symbol", "=", schedule_class["symbol"]]])
+                    if user["id"] in schedule_class["status"]:
+                        schedule_class["subscribe"].remove(user["id"])
+                        database.update("schedule_classes", {"subscribe": json.dumps(schedule_class["subscribe"], indent=2)}, [["parallel", "=", schedule_class["parallel"]], ["symbol", "=", schedule_class["symbol"]]])
                     return True
                 elif "НАЗАД" in message.text:
                     return MessageHandler.Settings.to_main(bot, message, user)
