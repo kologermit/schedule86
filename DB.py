@@ -2,8 +2,7 @@ import mysql.connector as MySQL
 from config import mysql as mysql_config
 class DB:
     def __init__(self, config):
-        self.__pool = MySQL.connect(**config)
-        self.__cursor = self.__pool.cursor()
+        self.__config = config
 
     def update(self, table, values, where=None):
         query = f"UPDATE {table} SET "
@@ -22,10 +21,12 @@ class DB:
                 query += f"\n AND {i[0]} {i[1]} %s"
                 data.append(i[2])
         try:
-            cursor = self.__pool.cursor()
+            pool = MySQL.connect(**self.__config)
+            cursor = pool.cursor()
             cursor.execute(query, data)
-            self.__pool.commit()
+            pool.commit()
             cursor.close()
+            pool.close()
             return True
         except Exception as err:
             print(err)
@@ -61,10 +62,12 @@ class DB:
                 data.append(j)
             query += ")"
         try:
-            cursor = self.__pool.cursor()
+            pool = MySQL.connect(**self.__config)
+            cursor = pool.cursor()
             cursor.execute(query, data)
-            self.__pool.commit()
+            pool.commit()
             cursor.close()
+            pool.close()
             return True
         except Exception as err:
             print(err)
@@ -92,22 +95,17 @@ class DB:
             query += "\n LIMIT %s"
             data.append(limit)
         try:
-            cursor = self.__pool.cursor()
+            pool = MySQL.connect(**self.__config)
+            cursor = pool.cursor()
             cursor.execute(query, data)
             res = cursor.fetchall()
-            self.__pool.commit()
+            pool.commit()
             cursor.close()
+            pool.close()
             return res
         except Exception as err:
             print(err)
-            return None
-
-    def __del__(self):
-        try:
-            self.__pool.close()
-        except:
-            pass
-        
+            return None        
 
 # database = DB(mysql_config)
 # database.update("log", {"text": "updated"}, [["id", "=", 31062]])
