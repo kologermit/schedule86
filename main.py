@@ -16,12 +16,12 @@ def json_loads(data):
         return None
 
 def get_user(message):
-    data = database.select('users', ['id', 'name', 'status', 'settings', 'class_parallel'], [['id', '=', message.chat.id]], 1)
+    data = database.select('users', ['id', 'name', 'status', 'settings'], [['id', '=', message.chat.id]], 1)
     if (data):
-        return {"id": data[0][0], "name": data[0][1], "status": data[0][2], "settings": json.loads(data[0][3]), 'class_parallel': data[0][4]}
+        return {"id": data[0][0], "name": data[0][1], "status": data[0][2], "settings": json.loads(data[0][3])}
     else:
         database.insert('users', ['id', 'name', 'status', 'settings'], [[message.chat.id, message.chat.first_name, 'menu', '{\"subscribe\": [], \"commands\": []}']])
-        return {"id": message.chat.id, "name": message.chat.first_name, "status": 'menu', "settings": {"subscribe": [], "commands": []}, "class_parallel": ''}
+        return {"id": message.chat.id, "name": message.chat.first_name, "status": 'menu', "settings": {"subscribe": [], "commands": []}}
 
 def log(message, user):
     query = "INSERT INTO log (text) VALUES (%s)"
@@ -532,7 +532,7 @@ class MessageHandler:
                     bot.send_message(user["id"], "Произошла ошибка!")
                     return True
                 classes = json_loads(classes[0][0])
-                bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(user["class_parallel"])]] + ["Назад🔙"]))
+                bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(user["settings"]["class_parallel"])]] + ["Назад🔙"]))
                 user_update(user, "schedule:symbol")
                 return True
 
