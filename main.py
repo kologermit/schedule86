@@ -9,6 +9,20 @@ from time import sleep
 bot = telebot.TeleBot(config.TOKEN)
 database = DB(config.mysql)
 bot.send_message(847721936, "Start Bot") #847721936
+is_exit = False
+
+from sys import exit
+from signal import signal, SIGTERM, SIGINT
+
+def exitHandler(signal_received, frame):
+    # Handle any cleanup here
+    global is_exit
+    is_exit = True
+    print('SIGTERM or CTRL-C detected. Exiting gracefully')
+    exit(0)
+
+signal(SIGTERM, exitHandler)
+signal(SIGINT, exitHandler)
 
 def json_loads(data):
     try:
@@ -60,6 +74,7 @@ def user_update(user, status=None, settings=None):
         database.update('users', {'status': status, 'settings': settings}, [['id', '=', user['id']]])
 
 def markups(buttons):
+    buttons.append("Меню")
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     b = []
     for i in buttons:
@@ -115,7 +130,7 @@ def start_message(message):
     log(message, user)
     user_update(user, "menu")
 
-@bot.message_handler(commands=['restart'])
+@bot.message_handler(commands=['restart', 'menu'])
 def start_message(message):
     user = get_user(message)
     bot.send_message(message.chat.id,"Перезаряжаю!!!!!!!!!!", reply_markup=menu_markups(user))
@@ -730,16 +745,54 @@ class MessageHandler:
                     return True
 
 def update_connection():
-    while True:
+    global is_exit
+    while not is_exit:
         try:
             del database
             database = DB(mysql)
-            time.sleep(5)
+            time.sleep(2)
         except:
             pass
 
 thread1 = Thread(target=update_connection)
 thread1.start()
+
+def today(last_day = False):
+    now = datetime.now().weekday() + 1
+    if now == 7:
+        now = 6
+    if last_day:
+        now -= 1
+    if now == 0:
+        now = 6
+    return now
+
+def weekday_thread():
+    global is_exit
+    time_last = weekday(today())
+    while not is_exit:
+        if time_last == weekday(today(last_day=True)):
+            last_day = weekday(today(last_day=True))
+            schedule_classes = [{"parallel": i[0], "symbol": i[1], "schedule": json_loads(i[2])} for i in database.select("schedule_classes", ["parallel", "symbol", "schedule"])]
+            schedule_teachers = [{"name": i[0], "schedule": json_loads(i[1])} for i in database.select("teachers", ["name", "schedule"])]
+            for i in schedule_classes:
+                parallel = i["parallel"]
+                symbol = i["symbol"]
+                schedule = i["schedule"]
+                if schedule["edited"].get(last_day):
+                    schedule["edited"].pop(last_day)
+                    database.update("schedule_classes", {"schedule": json.dumps(schedule, indent=2)}, [["parallel", "=", parallel], ["symbol", "=", symbol]])
+            for i in schedule_teachers:
+                name = i["name"]
+                if schedule["edited"].get(last_day):
+                    schedule["edited"].pop(last_day)
+                    database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
+            bot.send_message(847721936, f"Удаление расписания на {last_day}")
+        time_last = weekday(today())
+        time.sleep(2)
+
+thread2 = Thread(target=weekday_thread)
+thread2.start()
 
 @bot.message_handler(content_types=["text"])
 def handle_text(message):

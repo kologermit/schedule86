@@ -1,8 +1,8 @@
-#TOKEN = '5469643644:AAGswk4CVHLOTVx6ZwsVglcKcxkLQeMd030'
-TOKEN = "1375982367:AAE2irmoKbNdfsa7ZGoY2qP4d30iHeatTEE"
+TOKEN = '5469643644:AAGswk4CVHLOTVx6ZwsVglcKcxkLQeMd030'
+# TOKEN = "1375982367:AAE2irmoKbNdfsa7ZGoY2qP4d30iHeatTEE"
 mysql = {
-    "user": "root",
-    "password": "",
+    "user": "kologermit",
+    "password": "google.cO1221",
     "host": "localhost",
     "database": "schedule86"
 }
