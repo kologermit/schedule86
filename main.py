@@ -4,6 +4,7 @@ from datetime import datetime
 from DB import DB
 from copy import copy as copy_object
 from threading import Thread
+from time import sleep
 
 bot = telebot.TeleBot(config.TOKEN)
 database = DB(config.mysql)
@@ -772,4 +773,9 @@ def handle_text(message):
         bot.send_message(user["id"], f"Статус {user['status']} не найден!")
     return
 
-bot.polling()
+if __name__ == '__main__':
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        except:
+            sleep(0.3)
