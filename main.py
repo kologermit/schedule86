@@ -794,6 +794,14 @@ def weekday_thread():
 thread2 = Thread(target=weekday_thread)
 thread2.start()
 
+import gmail
+def gmail_thread():
+    global is_exit
+    while not is_exit:
+        gmail.main()
+thread3 = Thread(target=gmail_thread)
+thread3.start()
+
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
     print(f"{message.chat.id} {message.chat.first_name} |{message.text}|")
