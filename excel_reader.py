@@ -71,6 +71,7 @@ def read_classes(bot, user, path, day, edited):
                 bot.send_message(j, answer, parse_mode="HTML")
             except:
                 pass
+    bot.send_message(user["id"], "Всё ок")
     os.remove(path)
     del database
     pass
@@ -106,8 +107,6 @@ def read_teachers(bot, user, path, day, edited):
                 except:
                     continue
                 if name == sheet.cell_value(i, j):
-                    print(type(answer))
-                    print(answer)
                     if type(answer) != str:
                         
                         answer.append(name)

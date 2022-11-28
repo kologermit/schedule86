@@ -321,10 +321,6 @@ def document(message):
     except Exception as err:
         print(f"Error in excel reader: {err}")
         bot.send_message(user["id"], f"Произошла ошибка во время обработки файла:\nУчителя:{not is_classes}\nИзменения:{edited}\nДень:{day}")
-    try:
-        os.remove(file_path)
-    except:
-        pass
 
 def next_word(line):
     line = line.strip()
@@ -807,6 +803,10 @@ def handle_text(message):
     print(f"{message.chat.id} {message.chat.first_name} |{message.text}|")
     message.text = message.text.strip().replace("  ", " ").replace("\t\t", "\t")
     user = get_user(message)
+    if message.text.upper() == "МЕНЮ":
+        user_update(user, "menu")
+        bot.send_message(user["id"], "Запуская меню", reply_markup=menu_markups(user))
+        return
     if user["status"] not in ["settings:commands:add", "settings:commands:delete"]:
         message.text = message.text.upper()
     log(message, user)
