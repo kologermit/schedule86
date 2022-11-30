@@ -487,7 +487,12 @@ class MessageHandler:
             return True
 
         def symbol(bot, message, user):
-            if len(message.text) == 1 and message.text in "АБВГД":
+            classes = database.select("config", "data", [["theme", "=", "classes"]])
+            if not classes:
+                bot.send_message(user["id"], "Произошла ошибка!")
+                return True
+            classes = json_loads(classes[0][0])
+            if len(message.text) == 1 and message.text in classes[str(user["settings"]["class_parallel"])]:
                 bot.send_message(user["id"], "Выберите день недели:", reply_markup=markups(["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Вся неделя", "Назад🔙"]))
                 user["settings"]["class_symbol"] = message.text
                 user_update(user, "schedule:day", json.dumps(user["settings"], indent=2))
