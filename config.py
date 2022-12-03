@@ -13,3 +13,6 @@ GM_HOST='imap.gmail.com'
 GM_LOGIN='schedule86@gul86.ru'
 GM_PASSWORD='BK43HJFV7V0FD2JFVO'
 GM_PORT=993
+import os
+if os.path.exists("env.py"):
+    from env import *
