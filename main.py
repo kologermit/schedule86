@@ -9,20 +9,6 @@ from time import sleep
 bot = telebot.TeleBot(config.TOKEN)
 database = DB(config.mysql)
 bot.send_message(847721936, "Start Bot") #847721936
-is_exit = False
-
-from sys import exit
-from signal import signal, SIGTERM, SIGINT
-
-def exitHandler(signal_received, frame):
-    # Handle any cleanup here
-    global is_exit
-    is_exit = True
-    print('SIGTERM or CTRL-C detected. Exiting gracefully')
-    exit(0)
-
-signal(SIGTERM, exitHandler)
-signal(SIGINT, exitHandler)
 
 def json_loads(data):
     try:
@@ -746,8 +732,7 @@ class MessageHandler:
                     return True
 
 def update_connection():
-    global is_exit
-    while not is_exit:
+    while True:
         try:
             del database
             database = DB(mysql)
@@ -769,9 +754,8 @@ def today(last_day = False):
     return now
 
 def weekday_thread():
-    global is_exit
     time_last = weekday(today())
-    while not is_exit:
+    while True:
         if time_last == weekday(today(last_day=True)):
             last_day = weekday(today(last_day=True))
             schedule_classes = [{"parallel": i[0], "symbol": i[1], "schedule": json_loads(i[2])} for i in database.select("schedule_classes", ["parallel", "symbol", "schedule"])]
@@ -797,9 +781,9 @@ thread2.start()
 
 import gmail
 def gmail_thread():
-    global is_exit
-    while not is_exit:
+    while True:
         gmail.main()
+        
 thread3 = Thread(target=gmail_thread)
 thread3.start()
 
