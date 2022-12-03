@@ -47,6 +47,7 @@ def main():
 				print(i)
 				flag = True
 				sender = {"email": i, "id": senders[i]}
+	flag = False
 	log_query = {
 		"sender": sender,
 		"filelist": [],
@@ -114,3 +115,4 @@ def main():
 			excel_reader.read_classes(bot, sender, filename + ".xls", day, edited)
 		else:
 			excel_reader.read_teachers(bot, sender, filename + ".xls", day, edited)
+	flag = False
