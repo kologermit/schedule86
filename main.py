@@ -8,7 +8,19 @@ from time import sleep
 
 bot = telebot.TeleBot(config.TOKEN)
 database = DB(config.mysql)
-bot.send_message(847721936, "Start Bot") #847721936
+def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
+    params = {
+    }
+    if parse_mode:
+        params["parse_mode"] = parse_mode
+    if reply_markup:
+        params["reply_markup"] = reply_markup
+    try:
+        bot.send_message(user_id, message, **params)
+    except Exception as err:
+        print(err)
+
+bot_send_message(bot, 847721936, "Start Bot") #847721936
 
 def json_loads(data):
     try:
@@ -112,14 +124,14 @@ settings_markup = markups(["Подписка на расписание📅", "И
 @bot.message_handler(commands=['start'])
 def start_message(message):
     user = get_user(message)
-    bot.send_message(message.chat.id,"Привет! Я бот, который помогает узнать информацию, нужную для учёбы в ГЮЛ 86", reply_markup=menu_markups(user))
+    bot_send_message(bot, message.chat.id,"Привет! Я бот, который помогает узнать информацию, нужную для учёбы в ГЮЛ 86", reply_markup=menu_markups(user))
     log(message, user)
     user_update(user, "menu")
 
 @bot.message_handler(commands=['restart', 'menu'])
 def start_message(message):
     user = get_user(message)
-    bot.send_message(message.chat.id,"Перезаряжаю!!!!!!!!!!", reply_markup=menu_markups(user))
+    bot_send_message(bot, message.chat.id,"Перезаряжаю!!!!!!!!!!", reply_markup=menu_markups(user))
     log(message, user)
     user_update(user, "menu")
 
@@ -133,11 +145,11 @@ def t(message):
         return MessageHandler.Settings.Commands.delete(bot, message, user)
     message_data = [i for i in message.text.split(" ") if i]
     if len(message_data) == 1:
-        bot.send_message(user["id"],"Вы не написали фамилию учителя")
+        bot_send_message(bot, user["id"],"Вы не написали фамилию учителя")
         return True
     data = database.select("teachers", ["schedule", "name"], [["upper(name)","RLIKE",message_data[1].upper()]])
     if not data:
-        bot.send_message(user["id"],"Данный учитель не найден")
+        bot_send_message(bot, user["id"],"Данный учитель не найден")
         return True
     day = None
     if len(message_data) >= 3:
@@ -148,16 +160,16 @@ def t(message):
         day = weekday("вн")
     data, name = json_loads(data[0][0]), data[0][1]
     if not data:
-        bot.send_message(user["id"], "Произошла ошибка получения раписания!")
+        bot_send_message(bot, user["id"], "Произошла ошибка получения раписания!")
         return True
     if type(data) != type({}):
-        bot.send_message(user["id"], "Произошла ошибка получения раписания!")
+        bot_send_message(bot, user["id"], "Произошла ошибка получения раписания!")
         return True
     if data.get("standart") is None or data.get("edited") is None:
-        bot.send_message(user["id"], "Произошла ошибка получения раписания!")
+        bot_send_message(bot, user["id"], "Произошла ошибка получения раписания!")
         return True
     if type(data["standart"]) != type({}) or type(data["edited"]) != type({}):
-        bot.send_message(user["id"], "Произошла ошибка получения раписания!")
+        bot_send_message(bot, user["id"], "Произошла ошибка получения раписания!")
         return True
     if day != "ВСЯ НЕДЕЛЯ":
         answer = f"<b>Расписание {name} на {day}:\n</b>"
@@ -185,7 +197,7 @@ def t(message):
                 answer += "\n"
         else:
             answer += "<b>Изменений нет</b>"
-    bot.send_message(user["id"], answer, parse_mode="HTML", reply_markup=menu_markups(user))
+    bot_send_message(bot, user["id"], answer, parse_mode="HTML", reply_markup=menu_markups(user))
     return True
 
 @bot.message_handler(commands=['ts'])
@@ -194,25 +206,25 @@ def ts(message):
     log(message, user)
     message_data = [i for i in message.text.split(" ") if i]
     if len(message_data) == 1:
-        bot.send_message(user["id"],"Вы не написали фамилию учителя")
+        bot_send_message(bot, user["id"],"Вы не написали фамилию учителя")
         return True
     data = database.select("teachers", ["subscribe", "name"], [["name","RLIKE",message_data[1]]])
     if not data:
-        bot.send_message(user["id"],"Данный учитель не найден")
+        bot_send_message(bot, user["id"],"Данный учитель не найден")
         return True
     data, name = json_loads(data[0][0]), data[0][1]
     if data is None:
-        bot.send_message("Произошла ошибка")
+        bot_send_message(bot, "Произошла ошибка")
         return True
     if type(data) != type([]):
-        bot.send_message("Произошла ошибка")
+        bot_send_message(bot, "Произошла ошибка")
         return True
     if user["id"] in data:
-        bot.send_message(user["id"], f"Вы уже подписаны на {name}")
+        bot_send_message(bot, user["id"], f"Вы уже подписаны на {name}")
         return True
     data.append(user["id"])
     database.update("teachers", {"subscribe": json.dumps(data, indent=2)}, [["name", "=", name]])
-    bot.send_message(user["id"], f"Вы успешно подписались на учителя {name}")
+    bot_send_message(bot, user["id"], f"Вы успешно подписались на учителя {name}")
     return True
 
 @bot.message_handler(commands=['tu'])
@@ -221,25 +233,25 @@ def tu(message):
     log(message, user)
     message_data = [i for i in message.text.split(" ") if i]
     if len(message_data) == 1:
-        bot.send_message(user["id"],"Вы не написали фамилию учителя")
+        bot_send_message(bot, user["id"],"Вы не написали фамилию учителя")
         return True
     data = database.select("teachers", ["subscribe", "name"], [["name","RLIKE",message_data[1]]])
     if not data:
-        bot.send_message(user["id"],"Данный учитель не найден")
+        bot_send_message(bot, user["id"],"Данный учитель не найден")
         return True
     data, name = json_loads(data[0][0]), data[0][1]
     if data is None:
-        bot.send_message("Произошла ошибка")
+        bot_send_message(bot, "Произошла ошибка")
         return True
     if type(data) != type([]):
-        bot.send_message("Произошла ошибка")
+        bot_send_message(bot, "Произошла ошибка")
         return True
     if user["id"] not in data:
-        bot.send_message(user["id"], f"Вы не подписаны на {name}")
+        bot_send_message(bot, user["id"], f"Вы не подписаны на {name}")
         return True
     data.remove(user["id"])
     database.update("teachers", {"subscribe": json.dumps(data, indent=2)}, [["name", "=", name]])
-    bot.send_message(user["id"], f"Вы успешно отписались на учителя {name}")
+    bot_send_message(bot, user["id"], f"Вы успешно отписались на учителя {name}")
     return True
 
 @bot.message_handler(content_types=['document'])
@@ -258,20 +270,20 @@ def document(message):
         return True
     file_name = message.document.file_name
     if not file_name.endswith(".xls"):
-        bot.send_message(user["id"], "Расширение файла не .xls!")
+        bot_send_message(bot, user["id"], "Расширение файла не .xls!")
         return True
     file_name = file_name.replace(".xls", "")
     file_name_data = [i for i in file_name.split(" ") if i]
     if len(file_name_data) < 3:
-        bot.send_message(user["id"], "Не хватает параметров! (3)")
+        bot_send_message(bot, user["id"], "Не хватает параметров! (3)")
         return True
     day = weekday(file_name_data[0].upper())
     if day in ["ВСЯ НЕДЕЛЯ", None]:
-        bot.send_messge(user["id"], "Неверный параметр [ДЕНЬ]!")
+        bot_send_message(bot, user["id"], "Неверный параметр [ДЕНЬ]!")
         return True
     edited = None
     if file_name_data[1].upper() not in ["EDITED", "STANDART", "EDIT", "ИЗМЕНЕНИЯ", "ОСНОВНОЕ", "СТАНДАРТНОЕ", "ИЗМЕНЕНИЕ"]:
-        bot.send_message(user["id"], "Неверный параметр [ОСНОВНОЕ/ИЗМЕНЕНИЯ]!")
+        bot_send_message(bot, user["id"], "Неверный параметр [ОСНОВНОЕ/ИЗМЕНЕНИЯ]!")
         return True
     if file_name_data[1].upper() in ["EDITED", "EDIT", "ИЗМЕНЕНИЯ", "ИЗМЕНЕНИЕ"]:
         edited = True
@@ -279,7 +291,7 @@ def document(message):
         edited = False
     is_classes = None
     if file_name_data[2].upper() not in ["CLASS", "CLASSES", "КЛАСС", "КЛАССЫ", "TEACHERS", "TEACHER", "TEACH", "УЧИТЕЛЯ", "УЧИТЕЛЬ"]:
-        bot.send_message(user["id"], "Неверный параметр [КЛАССЫ/УЧИТЕЛЯ]!")
+        bot_send_message(bot, user["id"], "Неверный параметр [КЛАССЫ/УЧИТЕЛЯ]!")
         return True
     if file_name_data[2].upper() in ["CLASS", "CLASSES", "КЛАСС", "КЛАССЫ"]:
         is_classes = True
@@ -294,9 +306,9 @@ def document(message):
     try:
         file_path = bot.get_file(message.document.file_id).file_path
         urllib.request.urlretrieve(f'https://api.telegram.org/file/bot{config.TOKEN}/{file_path}', f"Temp/{user['id']}/{file_path}")
-        bot.send_message(user["id"], "Файл успешно получен")
+        bot_send_message(bot, user["id"], "Файл успешно получен")
     except Exception as err:
-        bot.send_message(user["id"], f"Произошла ошибка получения файла: {err}")
+        bot_send_message(bot, user["id"], f"Произошла ошибка получения файла: {err}")
         print(err)
         return True
     try:
@@ -306,7 +318,7 @@ def document(message):
             excel_reader.read_teachers(bot, user, f"Temp/{user['id']}/{file_path}", day, edited)
     except Exception as err:
         print(f"Error in excel reader: {err}")
-        bot.send_message(user["id"], f"Произошла ошибка во время обработки файла:\nУчителя:{not is_classes}\nИзменения:{edited}\nДень:{day}")
+        bot_send_message(bot, user["id"], f"Произошла ошибка во время обработки файла:\nУчителя:{not is_classes}\nИзменения:{edited}\nДень:{day}")
 
 def next_word(line):
     line = line.strip()
@@ -338,12 +350,12 @@ def python_command(message):
         except Exception as e:
             print(e)
         try:
-            bot.send_message(message.chat.id, e)
+            bot_send_message(bot, message.chat.id, e)
         except:
             pass
     except:
         try:
-            bot.send_message(message.chat.id, "Произошла ошибка во время выполненя кода")
+            bot_send_message(bot, message.chat.id, "Произошла ошибка во время выполненя кода")
         except:
             pass
 
@@ -356,36 +368,36 @@ class MessageHandler:
         if "ЗВОНКИ" in message.text:
             data = database.select('config', 'data', [['theme', '=', 'call_schedule']])
             if not data:
-                bot.send_message(user["id"], "Произошла ошибка получшения расписания звонков")
+                bot_send_message(bot, user["id"], "Произошла ошибка получшения расписания звонков")
             else:
                 data = json_loads(data[0][0])
                 if type(data) == type(list()):
                     answer = "<b>Расписание звонков:\n</b>"
                     for i in range(len(data)):
                         answer += f"<b>{i + 1})</b> {data[i]} \n"
-                    bot.send_message(user["id"], answer, parse_mode="HTML")
+                    bot_send_message(bot, user["id"], answer, parse_mode="HTML")
                 else:
-                    bot.send_message(user["id"], "Произошла ошибка получшения расписания звонков")
+                    bot_send_message(bot, user["id"], "Произошла ошибка получшения расписания звонков")
             return True
         if "КАНИКУЛЫ" in message.text:
             data = database.select('config', 'data', [['theme','=','holidays']])
             if not data:
-                bot.send_message(user["id"], "Произошла ошибка получшения расписания")
+                bot_send_message(bot, user["id"], "Произошла ошибка получшения расписания")
             else:
-                bot.send_message(user["id"], data[0][0], parse_mode="HTML")
+                bot_send_message(bot, user["id"], data[0][0], parse_mode="HTML")
             return True
         if "ИНФО" in message.text:
-            # bot.send_message(user["id"],"Данный бот создан выпускником\nМБОУ 'ГЮЛ №86' г.Ижевска\nКологерманским Фёдором (@kologermit)\nУчебный год 20/21")
-            bot.send_message(user["id"],"Кнопки для пользования ботом:\n1. Уроки - Узнать расписание уроков\n2. Звонки - Узнать расписание звонков\n3. Информация - Узнать подробную информацию о боте\n4. Где физ-ра? - Узнать, где будет физ-ра - на улице или в зале.\n\nКоманды:\n1. /start - Начать работу с ботом\n2. /restart - Перезапустить бота\n3. /info - Узнать подробную информацию о боте\n4. КлассБуква ДеньНедели (10а вторник) - Узнать расписание сразу на нужный класс и день (всю неделю)")
+            # bot_send_message(bot, user["id"],"Данный бот создан выпускником\nМБОУ 'ГЮЛ №86' г.Ижевска\nКологерманским Фёдором (@kologermit)\nУчебный год 20/21")
+            bot_send_message(bot, user["id"],"Кнопки для пользования ботом:\n1. Уроки - Узнать расписание уроков\n2. Звонки - Узнать расписание звонков\n3. Информация - Узнать подробную информацию о боте\n4. Где физ-ра? - Узнать, где будет физ-ра - на улице или в зале.\n\nКоманды:\n1. /start - Начать работу с ботом\n2. /restart - Перезапустить бота\n3. /info - Узнать подробную информацию о боте\n4. КлассБуква ДеньНедели (10а вторник) - Узнать расписание сразу на нужный класс и день (всю неделю)")
             return True
         if message.text.isdigit():
             if int(message.text) >= 5 and int(message.text) <= 11:
                 classes = database.select("config", "data", [["theme", "=", "classes"]])
                 if not classes:
-                    bot.send_message(user["id"], "Произошла ошибка!")
+                    bot_send_message(bot, user["id"], "Произошла ошибка!")
                     return True
                 classes = json_loads(classes[0][0])
-                bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(int(message.text))]] + ["Назад🔙"]))
+                bot_send_message(bot, user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(int(message.text))]] + ["Назад🔙"]))
                 user["settings"]["class_parallel"] = int(message.text)
                 user_update(user, "schedule:symbol", json.dumps(user["settings"], indent=2))
                 return True
@@ -394,11 +406,11 @@ class MessageHandler:
                 if int(message.text[0]) >= 5: 
                     classes = database.select("config", "data", [["theme", "=", "classes"]])
                     if not classes:
-                        bot.send_message(user["id"], "Произошла ошибка!")
+                        bot_send_message(bot, user["id"], "Произошла ошибка!")
                         return True
                     classes = json_loads(classes[0][0])
                     if not classes or type(classes) != type({}):
-                        bot.send_message(user["id"], "Произошла ошибка!")
+                        bot_send_message(bot, user["id"], "Произошла ошибка!")
                         return True
                     if message.text[1] in classes[message.text[0]]:
                         user["settings"]["class_parallel"] = int(message.text[0])
@@ -409,11 +421,11 @@ class MessageHandler:
                 if int(message.text[0:2]) >= 10 and int(message.text[0:2]) <= 11:
                     classes = database.select("config", "data", [["theme", "=", "classes"]])
                     if not classes:
-                        bot.send_message(user["id"], "Произошла ошибка!")
+                        bot_send_message(bot, user["id"], "Произошла ошибка!")
                         return True
                     classes = json_loads(classes[0][0])
                     if not classes or type(classes) != type({}):
-                        bot.send_message(user["id"], "Произошла ошибка!")
+                        bot_send_message(bot, user["id"], "Произошла ошибка!")
                         return True
                     if message.text[2] in classes[message.text[0:2]]:
                         user["settings"]["class_parallel"] = int(message.text[0:2])
@@ -440,14 +452,14 @@ class MessageHandler:
                 return MessageHandler.Schedule.day(bot, message, user)
 
         if "ГДЕ ФК?" in message.text:
-            bot.send_message(user["id"], get_weather.where_fizra(), parse_mode="HTML")
+            bot_send_message(bot, user["id"], get_weather.where_fizra(), parse_mode="HTML")
             return True
 
         if "НАСТРОЙКИ" in message.text:
             return MessageHandler.Settings.to_main(bot, message, user)
 
     def to_menu(bot, message, user):
-        bot.send_message(user["id"], "Хорошего дня!", reply_markup=menu_markups(user))
+        bot_send_message(bot, user["id"], "Хорошего дня!", reply_markup=menu_markups(user))
         user_update(user, status="menu")
         return True
 
@@ -457,10 +469,10 @@ class MessageHandler:
                 if int(message.text) >= 5 and int(message.text) <= 11:
                     classes = database.select("config", "data", [["theme", "=", "classes"]])
                     if not classes:
-                        bot.send_message(user["id"], "Произошла ошибка!")
+                        bot_send_message(bot, user["id"], "Произошла ошибка!")
                         return True
                     classes = json_loads(classes[0][0])
-                    bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(int(message.text))]] + ["Назад🔙"]))
+                    bot_send_message(bot, user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(int(message.text))]] + ["Назад🔙"]))
                     user["settings"]["class_parallel"] = int(message.text)
                     user_update(user, "schedule:symbol", json.dumps(user["settings"], indent=2))
                     return True
@@ -468,18 +480,18 @@ class MessageHandler:
                 return MessageHandler.to_menu(bot, message, user)
 
         def to_parall(bot, message, user):
-            bot.send_message(user["id"], "Выберите параллель:", reply_markup=markups(["5", "6", "7", "8", "9", "10", "11", "Назад🔙"]))
+            bot_send_message(bot, user["id"], "Выберите параллель:", reply_markup=markups(["5", "6", "7", "8", "9", "10", "11", "Назад🔙"]))
             user_update(user, status="schedule:parallel")
             return True
 
         def symbol(bot, message, user):
             classes = database.select("config", "data", [["theme", "=", "classes"]])
             if not classes:
-                bot.send_message(user["id"], "Произошла ошибка!")
+                bot_send_message(bot, user["id"], "Произошла ошибка!")
                 return True
             classes = json_loads(classes[0][0])
             if len(message.text) == 1 and message.text in classes[str(user["settings"]["class_parallel"])]:
-                bot.send_message(user["id"], "Выберите день недели:", reply_markup=markups(["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Вся неделя", "Назад🔙"]))
+                bot_send_message(bot, user["id"], "Выберите день недели:", reply_markup=markups(["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Вся неделя", "Назад🔙"]))
                 user["settings"]["class_symbol"] = message.text
                 user_update(user, "schedule:day", json.dumps(user["settings"], indent=2))
                 return True
@@ -491,7 +503,7 @@ class MessageHandler:
                 message.text = weekday(message.text)
                 data = database.select('schedule_classes', 'schedule', [['parallel','=',user['settings']['class_parallel']], ['symbol','=',user['settings']['class_symbol']]])
                 if not data:
-                    bot.send_message(user["id"], "Произошла ошибка получшения расписания")
+                    bot_send_message(bot, user["id"], "Произошла ошибка получшения расписания")
                 else:
                     data = json_loads(data[0][0])
                     answer = ""
@@ -522,26 +534,26 @@ class MessageHandler:
                                     answer += "\n"
                             else:
                                 answer += "<b>Изменений нет</b>"
-                        bot.send_message(user["id"], answer, parse_mode="HTML", reply_markup=menu_markups(user))
+                        bot_send_message(bot, user["id"], answer, parse_mode="HTML", reply_markup=menu_markups(user))
                         user["settings"].pop("class_parallel")
                         user["settings"].pop("class_symbol")
                         user_update(user, "menu", json.dumps(user["settings"], indent=2))
                     else:
-                        bot.send_message(user["id"], "Произошла ошибка получшения расписания")
+                        bot_send_message(bot, user["id"], "Произошла ошибка получшения расписания")
                 return True
             elif "НАЗАД" in message.text:
                 classes = database.select("config", "data", [["theme", "=", "classes"]])
                 if not classes:
-                    bot.send_message(user["id"], "Произошла ошибка!")
+                    bot_send_message(bot, user["id"], "Произошла ошибка!")
                     return True
                 classes = json_loads(classes[0][0])
-                bot.send_message(user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(user["settings"]["class_parallel"])]] + ["Назад🔙"]))
+                bot_send_message(bot, user["id"], "Выберите букву:", reply_markup=markups([i for i in classes[str(user["settings"]["class_parallel"])]] + ["Назад🔙"]))
                 user_update(user, "schedule:symbol")
                 return True
 
     class Settings:
         def to_main(bot, mesage, user):
-            bot.send_message(user["id"], "Какие настройки хотите поменять?", reply_markup=settings_markup)
+            bot_send_message(bot, user["id"], "Какие настройки хотите поменять?", reply_markup=settings_markup)
             user_update(user, "settings")
             return True
 
@@ -565,7 +577,7 @@ class MessageHandler:
                         answer += f"{i + 1}. {user['settings']['subscribe'][i]}\n"
                 else:
                     answer = "Вы не подписаны на классы"
-                bot.send_message(user["id"], answer, reply_markup=markups(["Добавить➕", "Удалить❌", "Назад🔙"]))
+                bot_send_message(bot, user["id"], answer, reply_markup=markups(["Добавить➕", "Удалить❌", "Назад🔙"]))
                 user_update(user, "settings:subscribe")
                 return True
 
@@ -576,15 +588,15 @@ class MessageHandler:
                 if "ДОБАВИТЬ" in message.text:
                     if user["settings"].get("subscribe"):
                         if len(user["settings"]["subscribe"]) >= 4:
-                            bot.send_message(user["id"], "Больше четырёх классов добавить нельзя!")
+                            bot_send_message(bot, user["id"], "Больше четырёх классов добавить нельзя!")
                             return True
                     classes = database.select("config", "data", [["theme", "=", "classes"]])
                     if not classes:
-                        bot.send_message(user["id"], "Произошла ошибка!")
+                        bot_send_message(bot, user["id"], "Произошла ошибка!")
                         return True
                     classes = json_loads(classes[0][0])
                     if not classes or type(classes) != type({}):
-                        bot.send_message(user["id"], "Произошла ошибка!")
+                        bot_send_message(bot, user["id"], "Произошла ошибка!")
                         return True
                     data = []
                     for i in classes:
@@ -592,15 +604,15 @@ class MessageHandler:
                             if f"{i}{j}" not in user["settings"]["subscribe"]:
                                 data.append(f"{i}{j}")
                     data.append("Назад🔙")
-                    bot.send_message(user["id"], "На какой класс хотите подписаться", reply_markup=markups(data))
+                    bot_send_message(bot, user["id"], "На какой класс хотите подписаться", reply_markup=markups(data))
                     user_update(user, "settings:subscribe:add")
                     return True
 
                 if "УДАЛИТЬ" in message.text:
                     if not user["settings"]["subscribe"]:
-                        bot.send_message(user["id"], "Вы не подписаны на классы!")
+                        bot_send_message(bot, user["id"], "Вы не подписаны на классы!")
                         return True
-                    bot.send_message(user["id"], "От расписания какого класса хотите отписаться?", reply_markup=markups(user["settings"]["subscribe"] + ["Назад🔙"]))
+                    bot_send_message(bot, user["id"], "От расписания какого класса хотите отписаться?", reply_markup=markups(user["settings"]["subscribe"] + ["Назад🔙"]))
                     user_update(user, "settings:subscribe:delete")
                     return True
 
@@ -613,14 +625,14 @@ class MessageHandler:
                         if int(message.text[0]) >= 5: 
                             classes = database.select("config", "data", [["theme", "=", "classes"]])
                             if not classes:
-                                bot.send_message(user["id"], "Произошла ошибка!")
+                                bot_send_message(bot, user["id"], "Произошла ошибка!")
                                 return True
                             classes = json_loads(classes[0][0])
                             if not classes or type(classes) != type({}):
-                                bot.send_message(user["id"], "Произошла ошибка!")
+                                bot_send_message(bot, user["id"], "Произошла ошибка!")
                                 return True
                             if message.text[1] in classes[message.text[0]] and message.text not in user["settings"]["subscribe"]:
-                                bot.send_message(user["id"], f"Вы успешно подписались на расписание {message.text} класса", reply_markup=settings_markup)
+                                bot_send_message(bot, user["id"], f"Вы успешно подписались на расписание {message.text} класса", reply_markup=settings_markup)
                                 user["settings"]["subscribe"].append(message.text)
                                 user_update(user, "settings", json.dumps(user["settings"], indent=2))
                                 schedule_class = database.select("schedule_classes", ["parallel", "symbol", "subscribe"], [["parallel", "=", int(message.text[:-1])], ["symbol", "=", message.text[-1]]])
@@ -639,14 +651,14 @@ class MessageHandler:
                         if int(message.text[0:2]) >= 10 and int(message.text[0:2]) <= 11:
                             classes = database.select("config", "data", [["theme", "=", "classes"]])
                             if not classes:
-                                bot.send_message(user["id"], "Произошла ошибка!")
+                                bot_send_message(bot, user["id"], "Произошла ошибка!")
                                 return True
                             classes = json_loads(classes[0][0])
                             if not classes or type(classes) != type({}):
-                                bot.send_message(user["id"], "Произошла ошибка!")
+                                bot_send_message(bot, user["id"], "Произошла ошибка!")
                                 return True
                             if message.text[2] in classes[message.text[0:2]] and message.text not in user["settings"]["subscribe"]:
-                                bot.send_message(user["id"], f"Вы успешно подписались на расписание {message.text} класса", reply_markup=settings_markup)
+                                bot_send_message(bot, user["id"], f"Вы успешно подписались на расписание {message.text} класса", reply_markup=settings_markup)
                                 user["settings"]["subscribe"].append(message.text)
                                 user_update(user, "settings", json.dumps(user["settings"], indent=2))
                                 schedule_class = database.select("schedule_classes", ["parallel", "symbol", "subscribe"], [["parallel", "=", int(message.text[:-1])], ["symbol", "=", message.text[-1]]])
@@ -664,7 +676,7 @@ class MessageHandler:
             def delete(bot, message, user):
                 if message.text in user["settings"]["subscribe"]:
                     user["settings"]["subscribe"].remove(message.text)
-                    bot.send_message(user["id"], f"Вы успешно отписались от раписания {message.text} класса", reply_markup=settings_markup)
+                    bot_send_message(bot, user["id"], f"Вы успешно отписались от раписания {message.text} класса", reply_markup=settings_markup)
                     user_update(user, "settings", json.dumps(user["settings"], indent=2))
                     schedule_class = database.select("schedule_classes", ["parallel", "symbol", "subscribe"], [["parallel", "=", int(message.text[:-1])], ["symbol", "=", message.text[-1]]])
                     if not schedule_class:
@@ -690,7 +702,7 @@ class MessageHandler:
                         answer += f"{i + 1}. {user['settings']['commands'][i]}\n"
                 else:
                     answer = "У вас нет избранных команд"
-                bot.send_message(user["id"], answer, reply_markup=markups(["Добавить➕", "Удалить❌", "Назад🔙"]))
+                bot_send_message(bot, user["id"], answer, reply_markup=markups(["Добавить➕", "Удалить❌", "Назад🔙"]))
                 user_update(user, "settings:commands")
                 return True
             def main(bot, message, user):
@@ -699,17 +711,17 @@ class MessageHandler:
                 
                 if "ДОБАВИТЬ" in message.text:
                     if len(user["settings"]["commands"]) >= 10:
-                        bot.send_message(user["id"], "Больше десяти команд добавить нельзя!")
+                        bot_send_message(bot, user["id"], "Больше десяти команд добавить нельзя!")
                         return True
-                    bot.send_message(user["id"], "Какую команду хотите добавить?", reply_markup=markups(["Назад🔙"]))
+                    bot_send_message(bot, user["id"], "Какую команду хотите добавить?", reply_markup=markups(["Назад🔙"]))
                     user_update(user, "settings:commands:add")
                     return True
 
                 if "УДАЛИТЬ" in message.text:
                     if not user["settings"]["commands"]:
-                        bot.send_message(user["id"], "У вас нет команд для удаления")
+                        bot_send_message(bot, user["id"], "У вас нет команд для удаления")
                         return True
-                    bot.send_message(user["id"], "Какую команду хотите удалить?", reply_markup=markups(user["settings"]["commands"] + ["Назад🔙"]))
+                    bot_send_message(bot, user["id"], "Какую команду хотите удалить?", reply_markup=markups(user["settings"]["commands"] + ["Назад🔙"]))
                     user_update(user, "settings:commands:delete")
                     return True
 
@@ -717,7 +729,7 @@ class MessageHandler:
                 if "НАЗАД" in message.text.upper():
                     return MessageHandler.Settings.Commands.to_main(bot, message, user)
                 else:
-                    bot.send_message(user["id"], f"Команда {message.text} успешно добавлена", reply_markup=settings_markup)
+                    bot_send_message(bot, user["id"], f"Команда {message.text} успешно добавлена", reply_markup=settings_markup)
                     user["settings"]["commands"].append(message.text)
                     user_update(user, "settings", json.dumps(user["settings"], indent=2))
                     return True
@@ -726,7 +738,7 @@ class MessageHandler:
                 if "НАЗАД" in message.text.upper():
                     return MessageHandler.Settings.Commands.to_main(bot, message, user)
                 elif message.text in user["settings"]["commands"]:
-                    bot.send_message(user["id"], f"Команда {message.text} успешно удалена", reply_markup=settings_markup)
+                    bot_send_message(bot, user["id"], f"Команда {message.text} успешно удалена", reply_markup=settings_markup)
                     user["settings"]["commands"].remove(message.text)
                     user_update(user, "settings", json.dumps(user["settings"], indent=2))
                     return True
@@ -772,7 +784,7 @@ def weekday_thread():
                 if schedule["edited"].get(last_day):
                     schedule["edited"].pop(last_day)
                     database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
-            bot.send_message(847721936, f"Удаление расписания на {last_day}")
+            bot_send_message(bot, 847721936, f"Удаление расписания на {last_day}")
         time_last = weekday(today())
         time.sleep(2)
 
@@ -794,7 +806,7 @@ def handle_text(message):
     user = get_user(message)
     if message.text.upper() == "МЕНЮ":
         user_update(user, "menu")
-        bot.send_message(user["id"], "Запуская меню", reply_markup=menu_markups(user))
+        bot_send_message(bot, user["id"], "Запуская меню", reply_markup=menu_markups(user))
         return
     if user["status"] not in ["settings:commands:add", "settings:commands:delete"]:
         message.text = message.text.upper()
@@ -815,12 +827,12 @@ def handle_text(message):
     if action.get(user["status"]):
         try:
             if not action[user["status"]](bot, message, user):
-                bot.send_message(user["id"], "Не понял!")
+                bot_send_message(bot, user["id"], "Не понял!")
         except Exception as err:
             print(err)
-            bot.send_message(user["id"], "Произошла ошибка")
+            bot_send_message(bot, user["id"], "Произошла ошибка")
     else:
-        bot.send_message(user["id"], f"Статус {user['status']} не найден!")
+        bot_send_message(bot, user["id"], f"Статус {user['status']} не найден!")
     return
 
 if __name__ == '__main__':

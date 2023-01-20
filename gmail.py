@@ -11,11 +11,23 @@ imap = imaplib.IMAP4_SSL(GM_HOST)
 imap.login(GM_LOGIN, GM_PASSWORD)
 admins = database.select("config", "data", [("theme", "=", "admins")])
 
+def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
+    params = {
+    }
+    if parse_mode:
+        params["parse_mode"] = parse_mode
+    if reply_markup:
+        params["reply_markup"] = reply_markup
+    try:
+        bot.send_message(user_id, message, **params)
+    except Exception as err:
+        print(err)
+
 if admins:
 	admins = json.loads(admins[0][0])
 for key in admins:
 	try:
-		bot.send_message(key, f"Произошёл запуск почты")
+		bot_send_message(bot, key, f"Произошёл запуск почты")
 	except:
 		pass
 
@@ -82,14 +94,14 @@ def main():
 		imap.store(mail_id, '+FLAGS', '\\Deleted')
 	imap.expunge()
 	for filename in filelist:
-		bot.send_message(sender["id"], f"Файл {filename} принят на обработку")
+		bot_send_message(bot, sender["id"], f"Файл {filename} принят на обработку")
 		if not filename.endswith(".xls"):
-			bot.send_message(sender["id"], "Расширение файла не .xls!")
+			bot_send_message(bot, sender["id"], "Расширение файла не .xls!")
 			break
 		filename = filename.replace(".xls", "")
 		filename_data = [i for i in filename.split(" ") if i]
 		if len(filename_data) < 3:
-			bot.send_message(sender["id"], "Не хватает параметров! (3)")
+			bot_send_message(bot, sender["id"], "Не хватает параметров! (3)")
 			return True
 		day = weekday(filename_data[0].upper())
 		if day in ["ВСЯ НЕДЕЛЯ", None]:
@@ -97,7 +109,7 @@ def main():
 			return True
 		edited = None
 		if filename_data[1].upper() not in ["EDITED", "STANDART", "EDIT", "ИЗМЕНЕНИЯ", "ОСНОВНОЕ", "СТАНДАРТНОЕ", "ИЗМЕНЕНИЕ"]:
-			bot.send_message(sender["id"], "Неверный параметр [ОСНОВНОЕ/ИЗМЕНЕНИЯ]!")
+			bot_send_message(bot, sender["id"], "Неверный параметр [ОСНОВНОЕ/ИЗМЕНЕНИЯ]!")
 			return True
 		if filename_data[1].upper() in ["EDITED", "EDIT", "ИЗМЕНЕНИЯ", "ИЗМЕНЕНИЕ"]:
 			edited = True
@@ -105,7 +117,7 @@ def main():
 			edited = False
 		is_classes = None
 		if filename_data[2].upper() not in ["CLASS", "CLASSES", "КЛАСС", "КЛАССЫ", "TEACHERS", "TEACHER", "TEACH", "УЧИТЕЛЯ", "УЧИТЕЛЬ"]:
-			bot.send_message(sender["id"], "Неверный параметр [КЛАССЫ/УЧИТЕЛЯ]!")
+			bot_send_message(bot, sender["id"], "Неверный параметр [КЛАССЫ/УЧИТЕЛЯ]!")
 			return True
 		if filename_data[2].upper() in ["CLASS", "CLASSES", "КЛАСС", "КЛАССЫ"]:
 			is_classes = True
