@@ -1,6 +1,4 @@
-import os
-import xlrd
-import json
+import os, xlrd, json, logging
 from DB import DB
 from config import mysql
 
@@ -26,14 +24,14 @@ def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
     try:
         bot.send_message(user_id, message, **params)
     except Exception as err:
-        print(err)
+        logging.info(err)
 
 def read_classes(bot, user, path, day, edited):
     database = DB(mysql)
     classes = database.select("config", "data", [["theme", "=", "classes"]])
     if not classes:
         bot_send_message(bot, user["id"], "Произошла ошибка получения классов!")
-        print(classes)
+        logging.info(classes)
         return True
     classes = json_loads(classes[0][0])
     if type(classes) != type({}):
@@ -72,8 +70,8 @@ def read_classes(bot, user, path, day, edited):
         subscribe = json.loads(base_data[0][1])
         base_data = json.loads(base_data[0][0])
         base_data["edited" if edited else "standart"][day] = data[i]
-        # print(int(i[:-1]))
-        # print(i[-1])
+        # logging.info(int(i[:-1]))
+        # logging.info(i[-1])
         database.update("schedule_classes", {"schedule": json.dumps(base_data, indent=2)}, where=[["parallel", "=",int(i[:-1])], ["symbol", "=", i[-1]]])
         for j in subscribe:
             try:

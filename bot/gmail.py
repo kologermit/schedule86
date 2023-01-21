@@ -1,4 +1,4 @@
-import imaplib, email, os, base64, telebot, json, time, excel_reader
+import imaplib, email, os, base64, telebot, json, time, excel_reader, logging
 from DB import DB
 from datetime import datetime
 from config import *
@@ -21,7 +21,7 @@ def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
     try:
         bot.send_message(user_id, message, **params)
     except Exception as err:
-        print(err)
+        logging.info(err)
 
 if admins:
 	admins = json.loads(admins[0][0])
@@ -56,7 +56,7 @@ def main():
 			status, select_data = imap.select("inbox")
 			status, search_data = imap.search(None, 'FROM', i)
 			if search_data[0] != b"":
-				print(i)
+				logging.info(i)
 				flag = True
 				sender = {"email": i, "id": senders[i]}
 	flag = False
@@ -65,7 +65,7 @@ def main():
 		"filelist": [],
 		"date": datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S")
 	}
-	print(f"Sender: {sender}")
+	logging.info(f"Sender: {sender}")
 	status, msg_data = imap.fetch("1", '(RFC822)')
 	mail = email.message_from_bytes(msg_data[0][1])
 	if mail.is_multipart():
@@ -84,7 +84,7 @@ def main():
 				log_query["filelist"].append(filename)
 				with open(filename, 'wb') as new_file:
 					new_file.write(part.get_payload(decode=True))
-	print(filelist)
+	logging.info(filelist)
 	database.insert("log", ["text"], [[json.dumps(log_query, indent=2)]])
 	imap.select("inbox", readonly = False)
 	result, data = imap.search(None, "ALL")

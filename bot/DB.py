@@ -1,8 +1,10 @@
 import mysql.connector as MySQL
+import logging
 from config import mysql as mysql_config
 class DB:
     def __init__(self, config):
         self.__config = config
+        self.query("SELECT 1", is_return=True)
 
     def update(self, table, values, where=None):
         query = f"UPDATE {table} SET "
@@ -20,17 +22,7 @@ class DB:
             for i in where[1:]:
                 query += f"\n AND {i[0]} {i[1]} %s"
                 data.append(i[2])
-        try:
-            pool = MySQL.connect(**self.__config)
-            cursor = pool.cursor()
-            cursor.execute(query, data)
-            pool.commit()
-            cursor.close()
-            pool.close()
-            return True
-        except Exception as err:
-            print(err)
-            return None
+        self.query(query, data)
         
         #values = {"col1": "data"}
         #where = (["col1", "=", "data"], ["col2", "=", "data2"])
@@ -61,19 +53,7 @@ class DB:
                 query += ", %s"
                 data.append(j)
             query += ")"
-        try:
-            pool = MySQL.connect(**self.__config)
-            cursor = pool.cursor()
-            cursor.execute(query, data)
-            pool.commit()
-            cursor.close()
-            pool.close()
-            return True
-        except Exception as err:
-            print(err)
-            return None
-
-
+        self.query(query, data)
 
     def select(self, table, columns="*", where=None, limit=None):
         query = f"SELECT "
@@ -94,20 +74,25 @@ class DB:
         if limit:
             query += "\n LIMIT %s"
             data.append(limit)
+        return self.query(query, data, True)
+
+    def query(self, sql_query, data=[], is_return=False):
         try:
             pool = MySQL.connect(**self.__config)
             cursor = pool.cursor()
-            cursor.execute(query, data)
-            res = cursor.fetchall()
+            cursor.execute(sql_query, data)
+            if is_return:
+                res = cursor.fetchall()
             pool.commit()
             cursor.close()
             pool.close()
-            return res
+            if is_return:
+                return res
         except Exception as err:
-            print(err)
-            return None        
+            logging.info(err)
+            return None       
 
 # database = DB(mysql_config)
 # database.update("log", {"text": "updated"}, [["id", "=", 31062]])
-# print(database.select("log", ["id", "text"], [["id", "=", 31063]], 10))
-# print(database.insert("log", "text", [["jj"], ["123"]]))
+# logging.info(database.select("log", ["id", "text"], [["id", "=", 31063]], 10))
+# logging.info(database.insert("log", "text", [["jj"], ["123"]]))

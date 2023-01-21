@@ -1,10 +1,10 @@
 from config import *
 from DB import DB
-import json
+import json, logging
 database = DB(mysql)
 classes = database.select(table="config", columns=["data"], where=[['theme', '=', 'classes']])
 if not classes:
-	print("Classes not found")
+	logging.info("Classes not found")
 	exit()
 classes = json.loads(classes[0][0])
 test_schedule = """{

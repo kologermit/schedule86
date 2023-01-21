@@ -6,22 +6,26 @@ services:
       - SYS_NICE
     restart: always
     environment:
+      - MYSQL_USER='kologermit'
+      - MYSQL_PASSWORD='Qwerty5432'
       - MYSQL_DATABASE=schedule86
       - MYSQL_ROOT_PASSWORD=Qwerty5432
     ports:
       - '3306:3306'
     volumes:
-      - db:/var/lib/mysql
-      - data.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db:/var/lib/mysql
+      # - ./data.sql:/docker-entrypoint-initdb.d/init.sql
   telebot:
-    container_name: telebot
+    # container_name: bot
     build: ./bot
     restart: on-failure
     volumes:
       - "./bot:/code"
-    networks:
+    # networks:
+    #   - mysql
+    depends_on:
       - mysql
 
-volumes:
+networks:
   mysql:
-    driver: local
+    driver: bridge

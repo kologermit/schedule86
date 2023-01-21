@@ -1,4 +1,4 @@
-import telebot, excel_reader, config, mysql.connector, json, get_weather, os, urllib, requests, time
+import telebot, excel_reader, config, mysql.connector, json, get_weather, os, urllib, requests, time, sys, logging
 from telebot import types
 from datetime import datetime
 from DB import DB
@@ -6,8 +6,20 @@ from copy import copy as copy_object
 from threading import Thread
 from time import sleep
 
+logging.basicConfig(filename="log.txt")
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+root.addHandler(handler)
+
+logging.info("Start bot")
+
 bot = telebot.TeleBot(config.TOKEN)
 database = DB(config.mysql)
+
 def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
     params = {
     }
@@ -18,7 +30,7 @@ def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
     try:
         bot.send_message(user_id, message, **params)
     except Exception as err:
-        print(err)
+        logging.info(err)
 
 bot_send_message(bot, 847721936, "Start Bot") #847721936
 
@@ -259,11 +271,11 @@ def document(message):
     user = get_user(message)
     teachers = database.select("config", ["data"], [["theme","=","teachers"]])
     if not teachers:
-        print("Not teachers")
+        logging.info("Not teachers")
         return False
     teachers = json_loads(teachers[0][0])
     if type(teachers) != type({}):
-        print("Type teachers != {}")
+        logging.info("Type teachers != {}")
         return False
     teachers = [teachers[i] for i in teachers]
     if user["id"] not in teachers:
@@ -309,7 +321,7 @@ def document(message):
         bot_send_message(bot, user["id"], "Файл успешно получен")
     except Exception as err:
         bot_send_message(bot, user["id"], f"Произошла ошибка получения файла: {err}")
-        print(err)
+        logging.info(err)
         return True
     try:
         if is_classes:
@@ -317,7 +329,7 @@ def document(message):
         else:
             excel_reader.read_teachers(bot, user, f"Temp/{user['id']}/{file_path}", day, edited)
     except Exception as err:
-        print(f"Error in excel reader: {err}")
+        logging.info(f"Error in excel reader: {err}")
         bot_send_message(bot, user["id"], f"Произошла ошибка во время обработки файла:\nУчителя:{not is_classes}\nИзменения:{edited}\nДень:{day}")
 
 def next_word(line):
@@ -348,7 +360,7 @@ def python_command(message):
         try:
             exec(answer[1])
         except Exception as e:
-            print(e)
+            logging.info(e)
         try:
             bot_send_message(bot, message.chat.id, e)
         except:
@@ -801,7 +813,7 @@ thread3.start()
 
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
-    print(f"{message.chat.id} {message.chat.first_name} |{message.text}|")
+    logging.info(f"{message.chat.id} {message.chat.first_name} |{message.text}|")
     message.text = message.text.strip().replace("  ", " ").replace("\t\t", "\t")
     user = get_user(message)
     if message.text.upper() == "МЕНЮ":
@@ -829,7 +841,7 @@ def handle_text(message):
             if not action[user["status"]](bot, message, user):
                 bot_send_message(bot, user["id"], "Не понял!")
         except Exception as err:
-            print(err)
+            logging.info(err)
             bot_send_message(bot, user["id"], "Произошла ошибка")
     else:
         bot_send_message(bot, user["id"], f"Статус {user['status']} не найден!")
