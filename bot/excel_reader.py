@@ -75,7 +75,7 @@ def read_classes(bot, user, path, day, edited):
         database.update("schedule_classes", {"schedule": json.dumps(base_data, indent=2)}, where=[["parallel", "=",int(i[:-1])], ["symbol", "=", i[-1]]])
         for j in subscribe:
             try:
-                answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании для {i} класса:</b>\n"
+                answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании на {day} для {i} класса:</b>\n"
                 for k in range(len(data[i])):
                     answer += f"<b>{k + 1}.</b> {data[i][k]}\n"
                 bot_send_message(bot, j, answer, parse_mode="HTML")
@@ -140,7 +140,7 @@ def read_teachers(bot, user, path, day, edited):
                         if not data:
                             data = ["-", "-", "-", "-", "-", "-"]
                         for s in subscribe:
-                            answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании для {name}:</b>\n"
+                            answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании на {day} для {name}:</b>\n"
                             for p in range(len(data)):
                                 answer += f"<b>{p + 1}.</b> {data[p]}\n"
                             try:
