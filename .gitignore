@@ -1,8 +1,8 @@
-/__pycache__
+__pycache__
 test.py
-/Temp
-/env
-/venv
+Temp
+env
+venv
 env.py
-/db
+db
 log.txt

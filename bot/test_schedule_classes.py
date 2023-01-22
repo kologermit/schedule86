@@ -2,29 +2,159 @@ from config import *
 from DB import DB
 import json, logging
 database = DB(mysql)
-classes = database.select(table="config", columns=["data"], where=[['theme', '=', 'classes']])
-if not classes:
-	logging.info("Classes not found")
-	exit()
-classes = json.loads(classes[0][0])
-test_schedule = """{
-  "standart": {
-    "\u041f\u041e\u041d\u0415\u0414\u0415\u041b\u042c\u041d\u0418\u041a": [
-    ],
-    "\u0412\u0422\u041e\u0420\u041d\u0418\u041a": [
-    ],
-    "\u0421\u0420\u0415\u0414\u0410": [
-    ],
-    "\u0427\u0415\u0422\u0412\u0415\u0420\u0413": [
-    ],
-    "\u041f\u042f\u0422\u041d\u0418\u0426\u0410": [
-    ],
-    "\u0421\u0423\u0411\u0411\u041e\u0422\u0410": [
-    ]
-  },
-  "edited": {}
-}"""
-for parallel in classes:
-	for symbol in classes[parallel]:
-		database.insert(table="schedule_classes", columns=["parallel", "symbol", "schedule", "subscribe"],
-			values=[[parallel, symbol, test_schedule, "[]"]])
+# # classes = database.select(table="config", columns=["data"], where=[['theme', '=', 'classes']])
+# # if not classes:
+# # 	logging.info("Classes not found")
+# # 	exit()
+# # classes = json.loads(classes[0][0])
+# teachers = ["Абашева С.Г.",
+
+# "Ангурян И.А.",
+
+# "Андреева С.Е.",
+
+# "Аристов Ю.А.",
+
+# "Бадриева Р.Р.",
+# "Безматерных Е.И,",
+# "Богатырева Д.Н.",
+
+# "Бушмакина Е.С.",
+
+# "Варламов А.М.",
+# "Вахрушев А.В.",
+
+# "Волкова Л.В.",
+
+# "Вохмина Т.А.",
+
+# "Гайнатуллина М.В.",
+
+# "Генералова Н.В.",
+
+# "Глазкова Л.В.",
+
+# "Гуляева А.Р.",
+
+# "Зеленина М.А.",
+
+# "Зиберт-Зиле К.А.",
+
+# "Зорина Е.А.",
+
+# "Зубкова Ю.В.",
+# "Иванова Т.Э.",
+
+# "Исангильдинова Ю.А.",
+
+# "Канакова А.А.",
+
+# "Канакова Е.Р.",
+
+# "Кологерманская А.Н.",
+
+# "Корнилова Н.С.",
+
+# "Коротаева Е.В.",
+
+# "Корюкова Н.Н.",
+
+# "Кравченко Л.В.",
+
+# "Кудрина И.М.",
+
+# "Кузнецов С.С.",
+
+# "Курсакова А.А.",
+
+# "Кырова Н.Н.",
+
+# "Лобанова Т.В.",
+# "Логунова Т.Ю.",
+
+# "Ломаева И.С.",
+
+# "Лялина Е.В.",
+
+# "Мерзляков А.С",
+# "Миловидов С.Г.",
+
+# "Никонова К.Ю.",
+
+# "Перевозчикова Е.С.",
+
+# "Петрушко Н.Н.",
+# "Прокопьева Т.В.",
+
+# "Пушкарева Л.В.",
+
+# "Радыгина С.В.",
+
+# "Рубинштейн И.Э.",
+
+# "Рудская Т.А.",
+
+# "Северюхина И.Л.",
+
+# "Сивкова Л.М.",
+
+# "Смехнова М.В.",
+
+# "Сорокина С.А.",
+# "Степанова Ю.С.",
+
+# "Столова Е.А.",
+
+# "Стяжкина И.В.",
+
+# "Суслов А.А.",
+# "Суслова Л.С.",
+
+# "Тарасова Л.И,",
+
+# "Тенсина Е.А",
+# "Тенсина Е.А.",
+
+# "Фисенко И.Н.",
+
+# "Хайруллин И.Р.",
+
+# "Холмогорова Е.В.",
+
+# "Чиркова М.Ю.",
+
+# "Чумакова О.В.",
+
+# "Шатунова Н.Е,",
+# "Шишова М.И.",
+# ]
+# test_schedule = """{
+#   "standart": {
+#     "\u041f\u041e\u041d\u0415\u0414\u0415\u041b\u042c\u041d\u0418\u041a": [
+#     ],
+#     "\u0412\u0422\u041e\u0420\u041d\u0418\u041a": [
+#     ],
+#     "\u0421\u0420\u0415\u0414\u0410": [
+#     ],
+#     "\u0427\u0415\u0422\u0412\u0415\u0420\u0413": [
+#     ],
+#     "\u041f\u042f\u0422\u041d\u0418\u0426\u0410": [
+#     ],
+#     "\u0421\u0423\u0411\u0411\u041e\u0422\u0410": [
+#     ]
+#   },
+#   "edited": {}
+# }"""
+# for name in teachers:
+# 	print(name)
+# 	database.insert(table="teachers", columns=["name", "subscribe", "schedule"],
+# 		values=[[name, "[]", test_schedule]])
+users = database.select("users", ["id", "settings"])
+for user in users:
+	user = {
+		"id": user[0],
+		"settings": json.loads(user[1])
+	}
+	print(user["id"])
+	user["settings"]["subscribe"] = []
+	database.update("users", {"settings": json.dumps(user["settings"], indent=2)}, [["id", "=", user["id"]]])
