@@ -50,7 +50,7 @@ def get_user(message):
 
 def log(message, user):
     database.insert('log', ['text'], [[json.dumps({
-        "user": user
+        "user": user,
         "message": message.text,
         "time": str(datetime.now())
     }, indent=2)]])
