@@ -34,6 +34,9 @@ def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
 
 bot_send_message(bot, 847721936, "Start Bot") #847721936
 
+while database.query("SELECT 1"):
+    pass
+
 def json_loads(data):
     try:
         return json.loads(data)
