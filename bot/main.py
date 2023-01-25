@@ -1,4 +1,4 @@
-import telebot, excel_reader, config, mysql.connector, json, get_weather, os, urllib, requests, time, sys, logging
+import telebot, excel_reader, config, mysql.connector, gmail, json, get_weather, os, urllib, requests, time, sys, logging
 from telebot import types
 from datetime import datetime
 from DB import DB
@@ -33,9 +33,6 @@ def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
         logging.info(err)
 
 bot_send_message(bot, 847721936, "Start Bot") #847721936
-
-while database.query("SELECT 1"):
-    pass
 
 def json_loads(data):
     try:
@@ -806,7 +803,6 @@ def weekday_thread():
 thread2 = Thread(target=weekday_thread)
 thread2.start()
 
-import gmail
 def gmail_thread():
     while True:
         gmail.main()

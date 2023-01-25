@@ -77,20 +77,21 @@ class DB:
         return self.query(query, data, True)
 
     def query(self, sql_query, data=[], is_return=False):
-        try:
-            pool = MySQL.connect(**self.__config)
-            cursor = pool.cursor()
-            cursor.execute(sql_query, data)
-            if is_return:
-                res = cursor.fetchall()
-            pool.commit()
-            cursor.close()
-            pool.close()
-            if is_return:
-                return res
-        except Exception as err:
-            logging.info(err)
-            return None       
+        while True:
+            try:
+                pool = MySQL.connect(**self.__config)
+                cursor = pool.cursor()
+                cursor.execute(sql_query, data)
+                if is_return:
+                    res = cursor.fetchall()
+                pool.commit()
+                cursor.close()
+                pool.close()
+                if is_return:
+                    return res
+                return
+            except Exception as err:
+                logging.info(err)       
 
 # database = DB(mysql_config)
 # database.update("log", {"text": "updated"}, [["id", "=", 31062]])
