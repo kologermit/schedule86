@@ -190,7 +190,7 @@ def t(message):
         if data["edited"].get(day):
             answer += "\n<b>Изменения:</b>\n"
             for i in range(len(data["edited"][day])):
-                answer += f"<b>{i})</b> {data['edited'][day][i]}\n"
+                answer += f"<b>{i + 1})</b> {data['edited'][day][i]}\n"
         else:
             answer += "\n<b>Изменений нет</b>"
     else:
