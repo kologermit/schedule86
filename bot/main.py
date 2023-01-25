@@ -186,7 +186,7 @@ def t(message):
     if day != "ВСЯ НЕДЕЛЯ":
         answer = f"<b>Расписание {name} на {day}:\n</b>"
         for i in range(len(data['standart'][day])):
-            answer += f"<b>{i})</b> {data['standart'][day][i]}\n"
+            answer += f"<b>{i + 1})</b> {data['standart'][day][i]}\n"
         if data["edited"].get(day):
             answer += "\n<b>Изменения:</b>\n"
             for i in range(len(data["edited"][day])):

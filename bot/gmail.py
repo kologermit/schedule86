@@ -5,7 +5,9 @@ from config import *
 
 bot = telebot.TeleBot(TOKEN)
 database = DB(mysql)
-senders = database.select("config", "data", [["theme", "=", "teachers"]])
+senders = None
+while senders is None:
+	senders = database.select("config", "data", [["theme", "=", "teachers"]])
 senders = json.loads(senders[0][0])
 imap = imaplib.IMAP4_SSL(GM_HOST)
 imap.login(GM_LOGIN, GM_PASSWORD)
