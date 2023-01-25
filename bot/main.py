@@ -49,7 +49,11 @@ def get_user(message):
         return {"id": message.chat.id, "name": message.chat.first_name, "status": 'menu', "settings": {"subscribe": [], "commands": []}}
 
 def log(message, user):
-    query = "INSERT INTO log (text) VALUES (%s)"
+    database.insert('log', ['text'], [[json.dumps({
+        "user": user
+        "message": message.text,
+        "time": str(datetime.now())
+    }, indent=2)]])
     
 def weekday(text):
     return ({
