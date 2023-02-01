@@ -24,7 +24,7 @@ def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
     try:
         bot.send_message(user_id, message, **params)
     except Exception as err:
-        logging.info(err)
+        logging.error(err)
 
 def read_classes(bot, user, path, day, edited):
     database = DB(mysql)
@@ -83,8 +83,6 @@ def read_classes(bot, user, path, day, edited):
                 pass
     bot_send_message(bot, user["id"], "Всё ок")
     os.remove(path)
-    del database
-    pass
 
 def read_teachers(bot, user, path, day, edited):
     database = DB(mysql)
@@ -100,7 +98,8 @@ def read_teachers(bot, user, path, day, edited):
         bot_send_message(bot, user["id"], "Не получилось открыть файл")
         os.remove(path)
         return
-    answer = []
+    res = []
+    names = []
     for k in teachers:
         name = k[0]
         subscribe = json.loads(k[1])
@@ -116,41 +115,37 @@ def read_teachers(bot, user, path, day, edited):
                     sheet.cell_value(i, j)
                 except:
                     continue
-                if name == sheet.cell_value(i, j):
-                    if type(answer) != str:
-                        
-                        answer.append(name)
-                        flag = True
-                        data = []
-                        for k in range(1, 18, 2):
-                            try:                            
-                                data.append(sheet.cell_value(i, j + k))
-                                if data[-1] == "":
-                                    data[-1] = "-"
-                            except:
-                                pass
-                        count = 0
-                        for p in data[::-1]:
-                            if p == "-":
-                                count += 1
-                            else:
-                                break
-                        if count:
-                            data = data[:-count]
-                        if not data:
-                            data = ["-", "-", "-", "-", "-", "-"]
-                        for s in subscribe:
-                            answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании на {day} для {name}:</b>\n"
-                            for p in range(len(data)):
-                                answer += f"<b>{p + 1}.</b> {data[p]}\n"
-                            try:
-                                bot_send_message(bot, s, answer, parse_mode="HTML")
-                            except:
-                                pass
-                        schedule["edited" if edited else "standart"][day] = data
-                        database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
+                if name.strip().upper() == str(sheet.cell_value(i, j)).strip().upper():
+                    flag = True
+                    names.append(name)
+                    flag = True
+                    data = []
+                    for k in range(1, 18, 2):
+                        try:                            
+                            data.append(sheet.cell_value(i, j + k))
+                            if data[-1] == "":
+                                data[-1] = "-"
+                        except:
+                            pass
+                    count = 0
+                    for p in data[::-1]:
+                        if p == "-":
+                            count += 1
+                        else:
+                            break
+                    if count:
+                        data = data[:-count]
+                    if not data:
+                        data = ["-", "-", "-", "-", "-", "-"]
+                    answer = f"<b>Изменения в {'стандартном ' if edited == False else ''}расписании на {day} для {name}:</b>\n"
+                    for p in range(len(data)):
+                        answer += f"<b>{p + 1}.</b> {data[p]}\n"
+                    for s in subscribe:
+                        bot_send_message(bot, s, answer, parse_mode="HTML")
+                    schedule["edited" if edited else "standart"][day] = data
+                    database.update("teachers", {"schedule": json.dumps(schedule, indent=2)}, [["name", "=", name]])
 
-    # bot_send_message(bot, user["id"], f"Расписание: teachers\nИзменения: {edited}\nДень: {day}")
+    bot_send_message(bot, user["id"], f"Расписание: teachers\nИзменения: {edited}\nДень: {day}")
+    bot_send_message(bot, user["id"], str(names))
     bot_send_message(bot, user["id"], "Всё ок")
     os.remove(path)
-    del database
