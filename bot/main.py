@@ -1,4 +1,4 @@
-import telebot, excel_reader, config, mysql.connector, gmail, json, get_weather, os, urllib, requests, time, sys, logging
+import telebot, excel_reader, config, mysql.connector, json, get_weather, os, urllib, requests, time, sys, logging
 from telebot import types
 from datetime import datetime
 from DB import DB
@@ -809,7 +809,8 @@ thread2.start()
 
 def gmail_thread():
     while True:
-        gmail.main()
+        # gmail.main()
+        pass
         
 thread3 = Thread(target=gmail_thread)
 thread3.start()

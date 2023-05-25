@@ -1,7 +1,9 @@
 version: '3.8'
 services:
   mysql:
+    container_name: mysql
     image: mysql:8.0
+    restart: always
     cap_add:
       - SYS_NICE
     restart: always
@@ -11,18 +13,20 @@ services:
       - MYSQL_DATABASE=schedule86
       - MYSQL_ROOT_PASSWORD=Qwerty5432
     ports:
-      - '3306:3306'
+      - '5000:3306'
     volumes:
       - ./db:/var/lib/mysql
       # - ./data.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mysql
   telebot:
-    # container_name: bot
+    container_name: bot
     build: ./bot
     restart: on-failure
     volumes:
       - "./bot:/code"
-    # networks:
-    #   - mysql
+    networks:
+      - mysql
     depends_on:
       - mysql
 
