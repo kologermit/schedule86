@@ -6,3 +6,5 @@ venv
 env.py
 db
 log.txt
+*.sql
+*sublime*

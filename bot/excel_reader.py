@@ -31,7 +31,6 @@ def read_classes(bot, user, path, day, edited):
     classes = database.select("config", "data", [["theme", "=", "classes"]])
     if not classes:
         bot_send_message(bot, user["id"], "Произошла ошибка получения классов!")
-        logging.info(classes)
         return True
     classes = json_loads(classes[0][0])
     if type(classes) != type({}):
@@ -60,7 +59,7 @@ def read_classes(bot, user, path, day, edited):
                             data[key].append(str(sheet.cell_value(i + i1, j)))
                     except:
                         pass
-                while data[key][-1] == "-":
+                while data[key] and data[key][-1] == "-":
                     data[key] = data[key][:-1]
     bot_send_message(bot, user["id"], f"Полученные классы: {str(list(data))}")
     for i in data:
@@ -70,8 +69,6 @@ def read_classes(bot, user, path, day, edited):
         subscribe = json.loads(base_data[0][1])
         base_data = json.loads(base_data[0][0])
         base_data["edited" if edited else "standart"][day] = data[i]
-        # logging.info(int(i[:-1]))
-        # logging.info(i[-1])
         database.update("schedule_classes", {"schedule": json.dumps(base_data, indent=2)}, where=[["parallel", "=",int(i[:-1])], ["symbol", "=", i[-1]]])
         for j in subscribe:
             try:

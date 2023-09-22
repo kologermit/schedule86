@@ -91,9 +91,4 @@ class DB:
                     return res
                 return
             except Exception as err:
-                logging.info(err)       
-
-# database = DB(mysql_config)
-# database.update("log", {"text": "updated"}, [["id", "=", 31062]])
-# logging.info(database.select("log", ["id", "text"], [["id", "=", 31063]], 10))
-# logging.info(database.insert("log", "text", [["jj"], ["123"]]))
+                logging.exception(err)       
