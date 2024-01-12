@@ -17,6 +17,7 @@ services:
       # - ./data.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - mysql
+    mem_limit: "600M"
       
   telebot:
     build: ./bot
@@ -27,6 +28,7 @@ services:
       - mysql
     depends_on:
       - mysql
+    mem_limit: "60M"
 
 networks:
   mysql:
