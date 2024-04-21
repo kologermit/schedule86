@@ -14,7 +14,7 @@ services:
       - '5000:3306'
     volumes:
       - ./db:/var/lib/mysql
-      # - ./data.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - mysql
     mem_limit: "600M"
