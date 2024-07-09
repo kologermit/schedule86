@@ -6,12 +6,12 @@ services:
       - SYS_NICE
     restart: always
     environment:
-      - MYSQL_USER='kologermit'
-      - MYSQL_PASSWORD='Qwerty5432'
-      - MYSQL_DATABASE=schedule86
-      - MYSQL_ROOT_PASSWORD=Qwerty5432
+      - MYSQL_USER=${DB_USER:-kologermit}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-Qwerty5432}
+      - MYSQL_DATABASE=${DB_NAME:-schedule86}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-Qwerty5432}
     ports:
-      - '5000:3306'
+      - ${DB_EXTERNAL_PORT:-5000}:3306
     volumes:
       - ./db:/var/lib/mysql
       - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql

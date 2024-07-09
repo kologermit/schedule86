@@ -1,8 +1,7 @@
-import telebot, excel_reader, config, mysql.connector, json, get_weather, os, urllib, requests, time, sys, logging
-from telebot import types
+import telebot, excel_reader, config, json, get_weather, os, urllib, time, sys, logging
 from datetime import datetime
+from telebot import types
 from DB import DB
-from copy import copy as copy_object
 from threading import Thread
 from time import sleep
 
@@ -758,18 +757,6 @@ class MessageHandler:
                     user_update(user, "settings", json.dumps(user["settings"], indent=2))
                     return True
 
-def update_connection():
-    while True:
-        try:
-            del database
-            database = DB(mysql)
-            time.sleep(2)
-        except:
-            pass
-
-thread1 = Thread(target=update_connection)
-thread1.start()
-
 def today(last_day = False):
     now = datetime.now().weekday() + 1
     if now == 7:
@@ -805,14 +792,6 @@ def weekday_thread():
 
 thread2 = Thread(target=weekday_thread)
 thread2.start()
-
-def gmail_thread():
-    while True:
-        # gmail.main()
-        pass
-        
-thread3 = Thread(target=gmail_thread)
-thread3.start()
 
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
