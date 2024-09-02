@@ -5,7 +5,7 @@ from DB import DB
 from threading import Thread
 from time import sleep
 
-logging.basicConfig(filename="log.txt")
+logging.basicConfig(filename=config.log_filename)
 root = logging.getLogger()
 root.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
