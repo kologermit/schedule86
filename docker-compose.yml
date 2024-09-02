@@ -6,7 +6,7 @@ services:
     volumes:
       - "./bot:/code:ro"
       - log:/log
-      - db:/db"
+      - db:/db
     mem_limit: "60M"
 
 volumes:
