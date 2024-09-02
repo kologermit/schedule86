@@ -1,6 +1,5 @@
-import os, xlrd, json, logging
+import os, xlrd, json, logging, config
 from DB import DB
-from config import mysql
 
 def json_loads(data):
     try:
@@ -27,7 +26,7 @@ def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
         logging.error(err)
 
 def read_classes(bot, user, path, day, edited):
-    database = DB(mysql)
+    database = DB(config.db_filename)
     classes = database.select("config", "data", [["theme", "=", "classes"]])
     if not classes:
         bot_send_message(bot, user["id"], "Произошла ошибка получения классов!")
@@ -82,7 +81,7 @@ def read_classes(bot, user, path, day, edited):
     os.remove(path)
 
 def read_teachers(bot, user, path, day, edited):
-    database = DB(mysql)
+    database = DB(config.db_filename)
     teachers = database.select("teachers", ["name", "subscribe", "schedule"])
     if not teachers:
         bot_send_message(bot, user["id"], "Проблема получения данных учителей")
