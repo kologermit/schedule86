@@ -17,7 +17,21 @@ root.addHandler(handler)
 logging.info("Start bot")
 
 bot = telebot.TeleBot(config.TOKEN)
-database = DB(config.mysql)
+database = DB(config.db_filename)
+
+if ("config") not in database.select("sqlite_master", ["name"], [["type", "=", "table"]]):
+    db_init_file = open(config.db_init_filename, "r")
+    for sql in db_init_file.read().split(";"):
+        database.query(sql)
+    db_init_file.close()
+
+if database.select("schedule_classes") == []:
+    for cl in database.select("config", ["data"], [["theme", "=", "classes"]], 1):
+        logging.info(cl[0])
+        data = json.loads(cl[0])
+        for parallel in data:
+            for symbol in data[parallel]:
+                database.insert("schedule_classes", ["parallel", "symbol"], [[parallel, symbol]])
 
 def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
     params = {

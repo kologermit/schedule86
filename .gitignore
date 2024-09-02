@@ -7,3 +7,5 @@ env.py
 db
 log.txt
 *sublime*
+.vscode
+db.sqlite3

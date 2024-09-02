@@ -1,10 +1,8 @@
-import mysql.connector as MySQL
-import logging
-from config import mysql as mysql_config
+import logging, sqlite3
+
 class DB:
-    def __init__(self, config):
-        self.__config = config
-        self.query("SELECT 1", is_return=True)
+    def __init__(self, db_filename):
+        self.filename = db_filename
 
     def update(self, table, values, where=None):
         query = f"UPDATE {table} SET "
@@ -12,15 +10,15 @@ class DB:
             return None
         values_keys = tuple(values.keys())
         data = [values[values_keys[0]]]
-        query += f"{values_keys[0]} = %s"
+        query += f"{values_keys[0]} = ?"
         for i in values_keys[1:]:
-            query += f",\n{i} = %s"
+            query += f",\n{i} = ?"
             data.append(values[i])
         if where:
-            query += f"\nWHERE {where[0][0]} {where[0][1]} %s"
+            query += f"\nWHERE {where[0][0]} {where[0][1]} ?"
             data.append(where[0][2])
             for i in where[1:]:
-                query += f"\n AND {i[0]} {i[1]} %s"
+                query += f"\n AND {i[0]} {i[1]} ?"
                 data.append(i[2])
         self.query(query, data)
         
@@ -40,17 +38,17 @@ class DB:
             for i in columns[1:]:
                 query += f", {i}"
             query += ") VALUES "
-        query += f"(%s"
+        query += f"(?"
         data.append(values[0][0])
         for i in values[0][1:]:
-            query += ", %s"
+            query += ", ?"
             data.append(i)
         query += ")"
         for i in values[1:]:
-            query += ", (%s"
+            query += ", (?"
             data.append(i[0])
             for j in i[1:]:
-                query += ", %s"
+                query += ", ?"
                 data.append(j)
             query += ")"
         self.query(query, data)
@@ -66,20 +64,20 @@ class DB:
                 query += f", {i}"
             query += f" FROM {table}"
         if where:
-            query += f"\nWHERE {where[0][0]} {where[0][1]} %s"
+            query += f"\nWHERE {where[0][0]} {where[0][1]} ?"
             data.append(where[0][2])
             for i in where[1:]:
-                query += f"\n AND {i[0]} {i[1]} %s"
+                query += f"\n AND {i[0]} {i[1]} ?"
                 data.append(i[2])
         if limit:
-            query += "\n LIMIT %s"
+            query += "\n LIMIT ?"
             data.append(limit)
         return self.query(query, data, True)
 
     def query(self, sql_query, data=[], is_return=False):
         while True:
             try:
-                pool = MySQL.connect(**self.__config)
+                pool = sqlite3.connect(self.filename)
                 cursor = pool.cursor()
                 cursor.execute(sql_query, data)
                 if is_return:
