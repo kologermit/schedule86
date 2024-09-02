@@ -4,5 +4,11 @@ services:
     build: ./bot
     restart: on-failure
     volumes:
-      - "./bot:/code"
+      - "./bot:/code:ro"
+      - log:"/log"
+      - db:"/db"
     mem_limit: "60M"
+
+volumes:
+  log:
+  db:
