@@ -5,7 +5,7 @@ from DB import DB
 from threading import Thread
 from time import sleep
 
-logging.basicConfig(filename="log.txt")
+logging.basicConfig()
 root = logging.getLogger()
 root.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
@@ -17,7 +17,13 @@ root.addHandler(handler)
 logging.info("Start bot")
 
 bot = telebot.TeleBot(config.TOKEN)
-database = DB(config.mysql)
+while True:
+    try:
+        database = DB(config.mysql)
+        break
+    except Exception as err:
+        logging.exception(err)
+        time.sleep(1)
 
 def bot_send_message(bot, user_id, message, parse_mode=None, reply_markup=None):
     params = {
@@ -163,7 +169,8 @@ def t(message):
     if len(message_data) == 1:
         bot_send_message(bot, user["id"],"Вы не написали фамилию учителя")
         return True
-    data = database.select("teachers", ["schedule", "name"], [["upper(name)","RLIKE",message_data[1].upper()]])
+    data = database.query("SELECT `schedule`, `name` FROM `teachers` WHERE UPPER(name) RLIKE %s", [message_data[1].upper()], is_return=True)
+    # data = database.select("teachers", ["schedule", "name"], [["upper(name)","RLIKE
     if not data:
         bot_send_message(bot, user["id"],"Данный учитель не найден")
         return True

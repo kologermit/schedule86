@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   mysql:
-    image: mysql:8.0
+    image: mysql:8
     cap_add:
       - SYS_NICE
     restart: always
@@ -15,9 +15,10 @@ services:
     volumes:
       - ./db:/var/lib/mysql
       - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
+#      - ./mysql/low-memory-my.cnf:/etc/mysql/my.cnf:ro
     networks:
       - mysql
-    mem_limit: "600M"
+#    mem_limit: "600M"
       
   telebot:
     build: ./bot

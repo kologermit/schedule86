@@ -13,21 +13,21 @@ INSERT INTO `config` (`theme`, `data`) VALUES
 CREATE TABLE IF NOT EXISTS `schedule_classes` (
   `parallel` int NOT NULL,
   `symbol` char(50) NOT NULL,
-  `schedule` text NOT NULL DEFAULT '{"standart": {"ПОНЕДЕЛЬНИК": [], "ВТОРНИК": [], "СРЕДА": [], "ЧЕТВЕРГ": [], "ПЯТНИЦА": [], "СУББОТА": []}, "edited": {}}',
-  `subscribe` text NOT NULL DEFAULT '[]'
+  `schedule` varchar(5000) NOT NULL DEFAULT '{"standart": {"ПОНЕДЕЛЬНИК": [], "ВТОРНИК": [], "СРЕДА": [], "ЧЕТВЕРГ": [], "ПЯТНИЦА": [], "СУББОТА": []}, "edited": {}}',
+  `subscribe` varchar(5000) NOT NULL DEFAULT '[]'
 );
 
 
 CREATE TABLE IF NOT EXISTS `teachers` (
   `name` tinytext NOT NULL,
-  `subscribe` text NOT NULL DEFAULT '[]',
-  `schedule` text NOT NULL DEFAULT '{"standart": {"ПОНЕДЕЛЬНИК": [], "ВТОРНИК": [], "СРЕДА": [], "ЧЕТВЕРГ": [], "ПЯТНИЦА": [], "СУББОТА": []}, "edited": {}}'
+  `subscribe` varchar(5000) NOT NULL DEFAULT '[]',
+  `schedule` varchar(5000) NOT NULL DEFAULT '{"standart": {"ПОНЕДЕЛЬНИК": [], "ВТОРНИК": [], "СРЕДА": [], "ЧЕТВЕРГ": [], "ПЯТНИЦА": [], "СУББОТА": []}, "edited": {}}'
 );
 
 
 CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint NOT NULL,
   `name` tinytext NOT NULL,
-  `status` tinytext NOT NULL DEFAULT 'menu',
-  `settings` text NOT NULL DEFAULT `{"subscribe": [], "commands": []}`
+  `status` varchar(5000) NOT NULL DEFAULT 'menu',
+  `settings` varchar(5000) NOT NULL DEFAULT '{"subscribe": [], "commands": []}'
 );
